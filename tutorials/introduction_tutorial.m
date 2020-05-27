@@ -1,15 +1,12 @@
 
 %%  1.  Create strings listing where the toolbox and the tutoral data directories are
 
-toolbox_directory_name = '../../ndt.1.0.4/'  % put name of path to the Neural Decoding Toolbox
-raster_data_directory_name = 'Zhang_Desimone_7objects_raster_data/';   % put name of path to the raster data
-
-
-
+toolbox_directory_name = 'C:\OneDrive\Lab\ESIN_Ephys_Files\Analysis\phyzzyML\dependencies\Neural Decoding Toolbox 1.0.4\ndt.1.0.4\';  % put name of path to the Neural Decoding Toolbox
+raster_data_directory_name = 'C:\OneDrive\Lab\ESIN_Ephys_Files\Analysis\phyzzyML\dependencies\Neural Decoding Toolbox 1.0.4\Zhang_Desimone_7objects_raster_data\';   % put name of path to the raster data
 
 %%  2.  Plot a rasters and a PSTH for one neuron that is in raster-format
 
-%load the raster-format data for one neuron 
+%load the raster-format data for one neuron
 load([raster_data_directory_name 'bp1021spk_04B_raster_data.mat']) 
 
 % plot the rasters
@@ -32,14 +29,10 @@ axis([0 1000 get(gca, 'YLim')])
 
 set(gcf, 'position', [200   400   900   350])
 
-
-
 %%  3.  Add the toolbox to Matlab's path       
 
 addpath(toolbox_directory_name) 
 add_ndt_paths_and_init_rand_generator
-
-
 
 %%  4.  Bin the data
 
@@ -49,8 +42,6 @@ step_size = 50;
 
 binned_data_file_name = create_binned_data_from_raster_data(raster_data_directory_name, save_prefix_name, bin_width, step_size);
  
-
-
 %%  5.  Calculate how many times each stimulus has been shown to each neuron
 
 load(binned_data_file_name);  % load the binned data
@@ -60,14 +51,7 @@ for i = 0:60
     num_sites_with_k_repeats(i + 1) = length(inds_of_sites_with_at_least_k_repeats);
 end
 
-
-
-
-
 %%  Begin the decoding analysis  %%
-
-
-
 
 %%  6.  Create a datasource object
 
@@ -79,8 +63,6 @@ num_cv_splits = 20;
 
 % create the basic datasource object
 ds = basic_DS(binned_data_file_name, specific_binned_labels_names,  num_cv_splits);
-
-
 
 % other useful options:
 
@@ -96,14 +78,10 @@ ds = basic_DS(binned_data_file_name, specific_binned_labels_names,  num_cv_split
 % can do the decoding on a subset of labels
 %ds.label_names_to_use =  {'kiwi', 'flower', 'guitar', 'hand'};
 
-
-
-
 %%   7.  Create a feature preprocessor object
 
 % create a feature preprocess that z-score normalizes each feature
 the_feature_preprocessors{1} = zscore_normalize_FP;  
-
 
 % other useful options:   
 
@@ -112,14 +90,10 @@ the_feature_preprocessors{1} = zscore_normalize_FP;
 % fp.num_features_to_use = 25;   % use only the 25 most selective neurons as determined by a univariate one-way ANOVA
 % the_feature_preprocessors{2} = fp;
 
-
-
-
 %%  8.  Create a classifier object 
 
 % select a classifier
 the_classifier = max_correlation_coefficient_CL;
-
 
 % other useful options:   
 
@@ -129,22 +103,16 @@ the_classifier = max_correlation_coefficient_CL;
 % use a support vector machine (see the documentation for all the optional parameters for this classifier)
 %the_classifier = libsvm_CL;
 
-
 %%  9.  create the cross-validator 
-
 
 the_cross_validator = standard_resample_CV(ds, the_classifier, the_feature_preprocessors);  
 
 the_cross_validator.num_resample_runs = 2;  % usually more than 2 resample runs are used to get more accurate results, but to save time we are using a small number here
 
-
 % other useful options:   
 
 % can greatly speed up the run-time of the analysis by not creating a full TCT matrix (i.e., only trainging and testing the classifier on the same time bin)
 % the_cross_validator.test_only_at_training_times = 1;  
-
-
-
 
 %%  10.  Run the decoding analysis   
 
@@ -152,11 +120,8 @@ the_cross_validator.num_resample_runs = 2;  % usually more than 2 resample runs 
 %log_code_obj = log_code_object;
 %log_code_obj.log_current_file; 
 
-
 % run the decoding analysis 
 DECODING_RESULTS = the_cross_validator.run_cv_decoding; 
-
-
 
 %%  11.  Save the results
 
@@ -168,10 +133,7 @@ save(save_file_name, 'DECODING_RESULTS');
 %LOGGED_CODE = log_code_obj.return_logged_code_structure;
 %save(save_file_name, '-v7.3', 'DECODING_RESULTS', 'LOGGED_CODE'); 
 
-
-
 %%  12.  Plot the basic results
-
 
 % which results should be plotted (only have one result to plot here)
 result_names{1} = save_file_name;
@@ -186,12 +148,7 @@ plot_obj.significant_event_times = 0;
 % optional argument, can plot different types of results
 %plot_obj.result_type_to_plot = 2;  % for example, setting this to 2 plots the normalized rank results
 
-
 plot_obj.plot_results;   % actually plot the results
-
-
-
-
 
 %%  13.  Plot the TCT matrix
 

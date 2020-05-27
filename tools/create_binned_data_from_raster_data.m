@@ -80,10 +80,10 @@ function saved_binned_data_file_name = create_binned_data_from_raster_data(raste
 %   my_raster_file_directory/ and will be sampled every 50 ms for the first 500 ms of data.  
 %   Additionally, there will be two 250 ms bins at the end of the binned data that have the average 
 %   firing rates over 1-250 ms into the trial and 251-500 ms into the trial. 
-
-
-%==========================================================================
-
+%
+%
+% ==========================================================================
+%
 %     This code is part of the Neural Decoding Toolbox.
 %     Copyright (C) 2011 by Ethan Meyers (emeyers@mit.edu)
 % 
@@ -102,13 +102,10 @@ function saved_binned_data_file_name = create_binned_data_from_raster_data(raste
     
 %========================================================================== 
 
-
-
-
 %  fix the directory name in case there it does not end with a slash
 last_char = raster_file_directory_name(end);
 if (strcmp(last_char, '/') + strcmp(last_char, '\') + strcmp(last_char, '*')) == 0
-    raster_file_directory_name = [raster_file_directory_name '/']
+    raster_file_directory_name = [raster_file_directory_name '/'];
 end
 
 
@@ -116,16 +113,19 @@ end
 % for example my_raster_directory/*PFC* will use only the files that have PFC in the file name 
 if strcmp(last_char, '*')
     raster_file_dir = dir(raster_file_directory_name);
-    [t r] = strtok(raster_file_directory_name, '/');
-    while ~isempty(r)
-        [t r] = strtok(r, '/');
-    end
-    raster_file_directory_name = raster_file_directory_name(1:(end - length(t)));  % remove the end string from the directory name
+%     [t, r] = strtok(raster_file_directory_name, '/');
+%     while ~isempty(r)
+%         [t, r] = strtok(r, '/');
+%     end
+%     raster_file_directory_name = raster_file_directory_name(1:(end - length(t)));  % remove the end string from the directory name
+  
+  % Removes the ending * and leaves only the path to the directory. Code
+  % above seems to not work in Windows.
+  raster_file_directory_name = [fileparts(raster_file_directory_name) filesep];
+
 else
     raster_file_dir = dir([raster_file_directory_name '*.mat']);
 end
-
-
 
 if isempty(raster_file_dir)
     if isempty(raster_file_dir)
@@ -135,7 +135,6 @@ if isempty(raster_file_dir)
     end
 end
 
-
 if nargin < 5
     start_time = 1;
 end
@@ -143,7 +142,6 @@ if nargin < 6
     load([raster_file_directory_name raster_file_dir(1).name]);
     end_time = size(raster_data, 2);  
 end
-
 
 if (length(bin_width) == 1) && (length(sampling_interval) == 1)  % if a single bin width and step size have been specified, then create binned data that averaged data over bin_width sized bins, sampled at sampling_interval intervals
     the_bin_start_times = start_time:sampling_interval:(end_time - bin_width  + 1);
@@ -157,17 +155,15 @@ elseif (length(bin_width) > 1) && (length(sampling_interval) > 1)
     the_bin_widths = bin_width;
 end
     
-
 if (length(sampling_interval) > 1) && (nargin > 4)
     error('If a series of start bin times are given by having sampling_interval be a vector, then one can not specify start_time and end_time arguments (i.e., the number of arguments to this function must be less than 5');
 end
 
-
 fprintf('\n');
 
 % go through all the files and bin them
+binned_data = cell(1, length(raster_file_dir));
 for i = 1:length(raster_file_dir)
-
 
     % print a message the the data is being binned (and add a dot for each file that has been binned
     curr_bin_string = [' Binning the data: ' num2str(i) ' of ' num2str(length(raster_file_dir))];
@@ -178,44 +174,41 @@ for i = 1:length(raster_file_dir)
     end
     bin_str_len = length(curr_bin_string);
 
-    
-    
-   load([raster_file_directory_name raster_file_dir(i).name]);  
-
+   load([raster_file_directory_name raster_file_dir(i).name]); % Contains raster_data, raster_labels, raster_site_info
+   
    curr_binned_data = bin_one_site(raster_data, the_bin_start_times, the_bin_widths);  % use the below helper function to bin the data
 
    binned_data{i} = curr_binned_data;
-
    
    % save all the labels
    the_label_names = fieldnames(raster_labels);
    for iLabel = 1:length(the_label_names)
       eval(['binned_labels.' the_label_names{iLabel} '{i} = raster_labels.' the_label_names{iLabel} ';']); 
    end
-       
    
-   % save any extra neuron info 
+   % save any extra neuron info
    if ~isempty(raster_site_info)
-       the_info_field_names = fieldnames(raster_site_info);  
-       for iInfo = 1:length(the_info_field_names)
+     % binned_site_info(i) = raster_site_info;      % Is there a reason this doesn't work?
+     the_info_field_names = fieldnames(raster_site_info);
+     for iInfo = 1:length(the_info_field_names)
        
-          if isstr( eval(['raster_site_info.' the_info_field_names{iInfo}])) 
-              eval(['binned_site_info.' the_info_field_names{iInfo} '{i} = raster_site_info.' the_info_field_names{iInfo} ';']); 
-          elseif isempty( eval(['raster_site_info.' the_info_field_names{iInfo}]))
-             % just ignore this field if it is empty...
-          else
-              eval(['binned_site_info.' the_info_field_names{iInfo} '(i, :) = raster_site_info.' the_info_field_names{iInfo} ';']);   % might run into problems with this so above line could be more useful
-          end
-       
+       if ischar(raster_site_info.(the_info_field_names{iInfo}))
+         %eval(['binned_site_info.' the_info_field_names{iInfo} '{i} = raster_site_info.' the_info_field_names{iInfo} ';']);
+         binned_site_info.(the_info_field_names{iInfo}){i} = raster_site_info.(the_info_field_names{iInfo});
+       elseif isempty(raster_site_info.(the_info_field_names{iInfo}))
+         % just ignore this field if it is empty...
+       else
+         %eval(['binned_site_info.' the_info_field_names{iInfo} '(i, :) = raster_site_info.' the_info_field_names{iInfo} ';']);   % might run into problems with this so above line could be more useful
+         binned_site_info.(the_info_field_names{iInfo})(i, :) = raster_site_info.(the_info_field_names{iInfo});
        end
        
+     end
    else
-       binned_site_info = [];
+     binned_site_info = [];
    end
    
 
 end
-
 
 % save extra information about the bin_width, sampling_interval, etc.
 binned_site_info.binning_parameters.raster_file_directory_name = raster_file_directory_name;
@@ -238,8 +231,6 @@ if isfield(binned_site_info, 'alignment_event_time')
     end
 end
 
-
-
 if (nargin < 5) && (length(bin_width) == 1) && (length(sampling_interval) == 1) 
     saved_binned_data_file_name = [save_prefix_name '_' num2str(bin_width) 'ms_bins_' num2str(sampling_interval) 'ms_sampled'];     
 elseif (nargin > 4) && (length(bin_width) == 1) && (length(sampling_interval) == 1)  
@@ -250,18 +241,13 @@ elseif (length(bin_width) > 1) && (length(sampling_interval) > 1)
     saved_binned_data_file_name = [save_prefix_name '_custom_bins_and_custom_sampling']; 
 end
 
-
 fprintf('\n')
 disp(['  Saving the binned data to the file:  ' saved_binned_data_file_name])
 
 
 %save(saved_binned_data_file_name, '-v7.3', 'binned_data', 'binned_labels', 'binned_site_info');
 save(saved_binned_data_file_name, 'binned_data', 'binned_labels', 'binned_site_info');
-
-
-
-
-
+end
 
 function  binned_data = bin_one_site(raster_data, the_bin_start_times, the_bin_widths)  
 % a helper function that bins the data for one site
@@ -269,16 +255,6 @@ function  binned_data = bin_one_site(raster_data, the_bin_start_times, the_bin_w
   for c = 1:length(the_bin_start_times)      
       binned_data(:, c) = mean(raster_data(:, the_bin_start_times(c):(the_bin_start_times(c) + the_bin_widths(c) -1)), 2);            
   end
-
   
-  
-
-    
-    
-
-            
-        
-     
-   
-
+end
 

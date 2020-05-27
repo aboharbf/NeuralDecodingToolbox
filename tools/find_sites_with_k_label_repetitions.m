@@ -13,7 +13,6 @@ function [inds_of_sites_with_at_least_k_repeats min_num_repeats_all_sites num_re
 %       but one only wants to know which sites have k repeats of 'red' and 'green' trials, then setting this to {'red', 'green'} will accomplish this goal). 
 %       If this argument is not specified, then any label that was presented to any site will be used.
 %
-%
 %  Outputs: 
 %
 %   1. inds_of_sites_with_at_least_k_repeats:  The indices of sites that have at least k repetitions of each condition.
@@ -72,24 +71,26 @@ function [inds_of_sites_with_at_least_k_repeats min_num_repeats_all_sites num_re
     
 %========================================================================== 
 
-
-
-
 ignore_case_of_strings = 0;  % could make this an input argument, but not going to bother for now
 
-
 if nargin < 3
-    label_names_to_use = [];
-    %label_names_to_use = {};  % switched this to make the code compatible with Octavem but problematic because now won't work with numbers as stimulus labels...
-    for iSite = 1:length(the_labels)
+  switch whatui
+    case 'Matlab'
+      % Seems 'Union' does the below operation.
+      label_names_to_use = unique([the_labels{:}]);
+    case 'Octave'
+      label_names_to_use = [];
+      
+      for iSite = 1:length(the_labels)
         
         if ignore_case_of_strings == 1
-            the_labels{iSite} = lower(the_labels{iSite});
+          the_labels{iSite} = lower(the_labels{iSite});
         end
         
         label_names_to_use = union(label_names_to_use, the_labels{iSite});
-
-    end
+        
+      end
+  end
 end
 
 
@@ -120,11 +121,3 @@ inds_of_sites_with_at_least_k_repeats = find(min_num_repeats_all_sites >= k);
 
 % return the name of the labels that were used (useful if label_names_to_use was not an input parameter)
 label_names_used = label_names_to_use;
-
-
-
-
-
-
-
-
