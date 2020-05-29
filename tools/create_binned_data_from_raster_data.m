@@ -112,23 +112,23 @@ end
 % if the directory ends with a name a * then use only those file names that have the string up to the *
 % for example my_raster_directory/*PFC* will use only the files that have PFC in the file name 
 if strcmp(last_char, '*')
-    raster_file_dir = dir(raster_file_directory_name);
-%     [t, r] = strtok(raster_file_directory_name, '/');
-%     while ~isempty(r)
-%         [t, r] = strtok(r, '/');
-%     end
-%     raster_file_directory_name = raster_file_directory_name(1:(end - length(t)));  % remove the end string from the directory name
+  raster_file_dir = dir(raster_file_directory_name);
+%   [t, r] = strtok(raster_file_directory_name, '/');
+%   while ~isempty(r)
+%     [t, r] = strtok(r, '/');
+%   end
+%   raster_file_directory_name = raster_file_directory_name(1:(end - length(t)));  % remove the end string from the directory name
   
   % Removes the ending * and leaves only the path to the directory. Code
   % above seems to not work in Windows.
   raster_file_directory_name = [fileparts(raster_file_directory_name) filesep];
-
+  
 else
-    raster_file_dir = dir([raster_file_directory_name '*.mat']);
+  raster_file_dir = dir([raster_file_directory_name '*.mat']);
 end
 
 if isempty(raster_file_dir)
-    if isempty(raster_file_dir)
+    if ~exist(raster_file_directory_name, 'dir')
         error('The directory name given does not exist');
     else
         error('The directory name given does not contain any .mat files');

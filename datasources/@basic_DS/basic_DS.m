@@ -99,8 +99,7 @@ classdef basic_DS < handle
 %       to get_data return the same randomly shuffled labels). This method is useful for creating a 
 %       null distribution to test whether a decoding result is above what one would expect by chance.  
 %
-%
-%  This object also has two addition method which are:
+%  This object also has two addition methods which are:
 %  
 %  1.  the_properties = get_DS_properties(ds)
 %       This method returns the main property values of the datasource.
@@ -121,11 +120,9 @@ classdef basic_DS < handle
 %   be used throughout all subsequent calls to get_data, allowing one to create a full null distribution
 %   by running the code multiple times).
 %    
-
-
-
+%
 %==========================================================================
-
+%
 %     This code is part of the Neural Decoding Toolbox.
 %     Copyright (C) 2011 by Ethan Meyers (emeyers@mit.edu)
 % 
@@ -144,12 +141,7 @@ classdef basic_DS < handle
     
 %==========================================================================    
 
-
-
-
-  
-properties 
-    
+properties  
     
     the_labels                    %  a cell array that contains vectors of labels that specify what occurred during each trial for all neurons the_data cell array  
     
@@ -184,13 +176,8 @@ properties
     %       variable is set to k > 1, then a random subset of labels k labels will be chosen each 
     %       time get_data is run (i.e., the different resample runs will use a different subset
     %       of k labels each time the get_data method is called).  
-
-    
-                                   
-           
+  
 end
-
-
 
 properties (GetAccess = 'public', SetAccess = 'private')
      
@@ -209,13 +196,10 @@ properties (GetAccess = 'public', SetAccess = 'private')
       
 end
 
-
 methods
-
-    
+   
         %function ds = basic_DS
         %end
-    
     
         % the constructor
         function ds = basic_DS(binned_data_name, specific_binned_label_name, num_cv_splits, load_data_as_spike_counts)
@@ -260,16 +244,12 @@ methods
         end
         
         
- 
-        
         % This method allows one to set exact prespecified sites to get data from 
         %  rather than randomly selecting a set of sites from the larger population (it should rarely be used)
         function ds = set_specific_sites_to_use(ds, curr_resample_sites_to_use)
             ds.curr_resample_sites_to_use = curr_resample_sites_to_use;
         end
-           
-        
-        
+                   
         %  This method returns the main property values of the datasource (could be useful for saving what parameters were used)
         function the_properties = get_DS_properties(ds)
             
@@ -462,7 +442,7 @@ methods
             the_data = ds.the_data;                                                 
             the_labels = ds.the_labels;            
             num_cv_splits = ds.num_cv_splits;            
-            num_times_to_repeat_each_label_per_cv_split =  ds.num_times_to_repeat_each_label_per_cv_split;                        
+            num_times_to_repeat_each_label_per_cv_split =  ds.num_times_to_repeat_each_label_per_cv_split;                         %#ok<*PROP>
             curr_resample_sites_to_use = ds.curr_resample_sites_to_use;
             label_names_to_use = ds.label_names_to_use;  if size(label_names_to_use, 1) ~= 1, label_names_to_use = label_names_to_use'; end  % make sure labels numbers are in the correct orientation
             sites_to_use = ds.sites_to_use;
@@ -472,12 +452,10 @@ methods
             create_simultaneously_recorded_populations = ds.create_simultaneously_recorded_populations;
             %use_random_subset_of_k_labels_each_time_data_is_retrieved = ds.use_random_subset_of_k_labels_each_time_data_is_retrieved;
                     
-                    
             % a santy checks
             if isempty(sites_to_use) 
                error('sites_to_use can not be empty') 
             end
-
             
             % if sites_to_use is a number that is less than 0, use all sites
             if  (sites_to_use < 1)
@@ -718,16 +696,9 @@ methods
             %    [XTr_all_time_cv XTe_all_time_cv] = turn_all_simultaneous_data_into_pseudo_populations(XTr_all_time_cv, YTr_all, XTe_all_time_cv, YTe_all, simul_to_pseudo_feature_to_siteID_mapping)
             % end
   
-            
         end   % end get_data
-        
-        
-        
+
    end  % end methods
-   
-    
-   
-   
    
 end % end class
 

@@ -1,8 +1,8 @@
 
 %%  1.  Create strings listing where the toolbox and the tutoral data directories are
 
-toolbox_directory_name = 'C:\OneDrive\Lab\ESIN_Ephys_Files\Analysis\phyzzyML\dependencies\Neural Decoding Toolbox 1.0.4\ndt.1.0.4\';  % put name of path to the Neural Decoding Toolbox
-raster_data_directory_name = 'C:\OneDrive\Lab\ESIN_Ephys_Files\Analysis\phyzzyML\dependencies\Neural Decoding Toolbox 1.0.4\Zhang_Desimone_7objects_raster_data\';   % put name of path to the raster data
+toolbox_directory_name = 'C:\OneDrive\Lab\ESIN_Ephys_Files\Analysis\NeuralDecodingToolbox\';  % put name of path to the Neural Decoding Toolbox
+raster_data_directory_name = 'C:\OneDrive\Lab\ESIN_Ephys_Files\Analysis\NeuralDecodingToolbox\tutorials\Zhang_Desimone_7objects_raster_data\';   % put name of path to the raster data
 
 %%  2.  Plot a rasters and a PSTH for one neuron that is in raster-format
 
@@ -39,6 +39,7 @@ add_ndt_paths_and_init_rand_generator
 save_prefix_name = 'Binned_Zhang_Desimone_7object_data';
 bin_width = 150; 
 step_size = 50;  
+%% 
 
 binned_data_file_name = create_binned_data_from_raster_data(raster_data_directory_name, save_prefix_name, bin_width, step_size);
  
@@ -72,7 +73,7 @@ ds = basic_DS(binned_data_file_name, specific_binned_labels_names,  num_cv_split
 % can have multiple repetitions of each label in each cross-validation split (which is a faster way to run the code that uses most of the data)
 %ds.num_times_to_repeat_each_label_per_cv_split = 2;
 
- % optionally can specify particular sites to use
+% optionally can specify particular sites to use
 %ds.sites_to_use = find_sites_with_k_label_repetitions(the_labels_to_use, num_cv_splits);  
 
 % can do the decoding on a subset of labels
@@ -115,7 +116,6 @@ the_cross_validator.num_resample_runs = 2;  % usually more than 2 resample runs 
 % the_cross_validator.test_only_at_training_times = 1;  
 
 %%  10.  Run the decoding analysis   
-
 % if calling the code from a script, one can log the code so that one can recreate the results 
 %log_code_obj = log_code_object;
 %log_code_obj.log_current_file; 
@@ -144,7 +144,6 @@ plot_obj = plot_standard_results_object(result_names);
 % put a line at the time when the stimulus was shown
 plot_obj.significant_event_times = 0;   
 
-
 % optional argument, can plot different types of results
 %plot_obj.result_type_to_plot = 2;  % for example, setting this to 2 plots the normalized rank results
 
@@ -155,12 +154,18 @@ plot_obj.plot_results;   % actually plot the results
 plot_obj = plot_standard_results_TCT_object(save_file_name);
 
 plot_obj.significant_event_times = 0;   % the time when the stimulus was shown
-
+plot_obj.TCT_figure_number = length(findobj('type','figure')) + 1; % Open a new figure.
 
 % optional parameters when displaying the TCT movie
 %plot_obj.movie_time_period_titles.title_start_times = [-500 0];
 %plot_obj.movie_time_period_titles.title_names = {'Fixation Period', 'Stimulus Period'}
 
+% To turn off the movie, set the property to 0.
+% plot_obj.display_TCT_movie = 0;
+
 plot_obj.plot_results;  % plot the TCT matrix and a movie showing if information is coded by a dynamic population code
 
+%% 14. Clean up files produced
+delete([save_file_name '.mat']);
+delete([binned_data_file_name '.mat']);
 

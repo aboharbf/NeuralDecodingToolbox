@@ -73,8 +73,6 @@ classdef plot_standard_results_TCT_object
 %   plot_training_latencies_increasing_up_the_y_axis (default = 1).  If this is set to 1, then the training latencies that are earlier in the trial
 %     will be plotted closer to the x-axis (i.e., the results will be equivalent to using 'axis xy' rather than 'axis ij')
 %
-%
-%
 %  To display movies of the TCT results, where each frame shows the results for training at t1 and testing at t2, the display_TCT_movie must be set to one 
 %   (which is the default behavior of this property).  If plot_obj.display_TCT_movie = 1; then the following additional properties can be set:
 %

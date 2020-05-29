@@ -1,5 +1,4 @@
-function [inds_of_sites_with_at_least_k_repeats min_num_repeats_all_sites num_repeats_matrix label_names_used] = find_sites_with_k_label_repetitions(the_labels, k, label_names_to_use)
-
+function [inds_of_sites_with_at_least_k_repeats, min_num_repeats_all_sites, num_repeats_matrix, label_names_used] = find_sites_with_k_label_repetitions(the_labels, k, label_names_to_use)
 % This function takes in labels in binned label format, and an integer k, and returns the indices for all sites (e.g. neurons) 
 %   that have at least k presentations of each condition.  The arguments to this function are:
 %
@@ -48,11 +47,9 @@ function [inds_of_sites_with_at_least_k_repeats min_num_repeats_all_sites num_re
 %       gives the total number of sites, num_sites_with_k_repeats(2) gives how many sites have at least one presentation of each stimulus, etc.
 %       (note that 2 repetitions is the minimum needed to do a decoding analyses, although to get reasonable results usually more than 2 repetitions
 %       are needed).
-
-
-
-%==========================================================================
-
+%
+%     ==========================================================================
+%
 %     This code is part of the Neural Decoding Toolbox.
 %     Copyright (C) 2011 by Ethan Meyers (emeyers@mit.edu)
 % 
@@ -68,16 +65,22 @@ function [inds_of_sites_with_at_least_k_repeats min_num_repeats_all_sites num_re
 % 
 %     You should have received a copy of the GNU General Public License
 %     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-    
-%========================================================================== 
+%    
+%     ========================================================================== 
 
 ignore_case_of_strings = 0;  % could make this an input argument, but not going to bother for now
 
-if nargin < 3
+if nargin < 3 || (nargin == 3 && isempty(label_names_to_use))
   switch whatui
+    
     case 'Matlab'
       % Seems 'Union' does the below operation.
-      label_names_to_use = unique([the_labels{:}]);
+      if size(the_labels{1},1) > 1
+        label_names_to_use = unique(vertcat(the_labels{:}));
+      else
+        label_names_to_use = unique([the_labels{:}]);
+      end
+      
     case 'Octave'
       label_names_to_use = [];
       
@@ -106,17 +109,26 @@ for iSite = 1:length(the_labels)
     end
 end
 
-
-
 if length(label_names_to_use) == 1
     min_num_repeats_all_sites = num_repeats_matrix';
 else
     min_num_repeats_all_sites = min(num_repeats_matrix');
 end
 
-
-
 inds_of_sites_with_at_least_k_repeats = find(min_num_repeats_all_sites >= k);
+
+% If you want to know how many of your units you can use, it is useful to
+% plot some distribution showing how many units you will have for each k.
+figure()
+sorted_min_reps = sort(min_num_repeats_all_sites);
+possible_k = 1:sorted_min_reps(end);
+possible_units = arrayfun(@(x) sum(sorted_min_reps >= possible_k(x)), possible_k);
+plot(possible_k, possible_units, 'color', 'k')
+hold on
+plot([k k], ylim(), 'LineWidth', 3, 'color', 'r')
+xlabel('Possible Repeats of set')
+ylabel('Units with X Repeats')
+title(sprintf('Minimum Repeats per k selection: %d = %d units', k, possible_units(k)))
 
 
 % return the name of the labels that were used (useful if label_names_to_use was not an input parameter)

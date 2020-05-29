@@ -55,14 +55,10 @@ classdef zscore_normalize_FP
     
 %==========================================================================    
 
-
-
-
     properties 
         mean_XTr = [];
         stdev_XTr = [];
     end
-
 
     methods 
 
@@ -70,12 +66,10 @@ classdef zscore_normalize_FP
         function fp = zscore_normalize_FP
         end
 
-
         function current_FP_info_to_save = get_current_info_to_save(fp)
             current_FP_info_to_save = [];  % this FP object does not have any information that can be saved
         end
         
-
         function [fp XTr_normalized] = set_properties_with_training_data(fp, XTr, tilda_junk)   % inputs should really be (fp, XTr, YTr), matlab creators really do not understard OOP
         %function [fp XTr_normalized] = set_properties_with_training_data(fp, XTr, ~)  % changed this line so that the toolbox will be compatible with older versions of matlab  
          
@@ -87,12 +81,10 @@ classdef zscore_normalize_FP
                
         end
 
-
         function X_normalized = preprocess_test_data(fp, X_data)
             X_normalized = (X_data - repmat(fp.mean_XTr, 1, size(X_data, 2)))./(repmat(fp.stdev_XTr, 1, size(X_data, 2)));  
         end
 
-        
         
     end  % end methods
     
