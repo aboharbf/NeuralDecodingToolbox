@@ -298,10 +298,8 @@ classdef standard_resample_CV
 %           any baseline period is likely to be greater than 0).  The advantage of using this method is that one can now estimate 
 %           a measure of this mutual information's variability calculated over resamples, which is in the field .stdev.over_resamples.
 %
-
-
-%==========================================================================
-
+%     ==========================================================================
+%
 %     This code is part of the Neural Decoding Toolbox.
 %     Copyright (C) 2011 by Ethan Meyers (emeyers@mit.edu)
 % 
@@ -317,11 +315,8 @@ classdef standard_resample_CV
 % 
 %     You should have received a copy of the GNU General Public License
 %     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-    
+%
 %==========================================================================   
-
-
-
 
     properties 
 
@@ -332,7 +327,6 @@ classdef standard_resample_CV
         num_resample_runs = 50;
                
         test_only_at_training_times = 0;
-        
         
         % result types to save
         save_results = struct('ROC_AUC', 1, 'normalized_rank', 1, 'decision_values', 1, 'extended_decision_values', 0, 'mutual_information', 1);
@@ -347,15 +341,10 @@ classdef standard_resample_CV
         % Setting the different properties of stop_resample_runs_only_when_specfic_results_have_converged causes the resample runs to continue beyond those specified by num_resample runs
         % if the results have not converged to specified values.   
         stop_resample_runs_only_when_specfic_results_have_converged = struct('zero_one_loss_results', [], 'normalized_rank_results', [], 'decision_values', [], 'combined_CV_ROC_results', [], 'separate_CV_ROC_result', [], 'stop_criteria_is_absolute_result_value', 1);
-      
-                
-        
+                      
     end
     
-    
-  
     methods
-        
         
         % the constructor  - pass the main objects needed to run the cv decoding
         function cv = standard_resample_CV(the_datasource, the_classifier, the_feature_preprocessors)
@@ -369,9 +358,6 @@ classdef standard_resample_CV
                       
         end
         
-        
- 
-       
         function DECODING_RESULTS = run_cv_decoding(cv) 
 
             % sanity checks
@@ -384,7 +370,6 @@ classdef standard_resample_CV
                 cv.test_only_at_training_times = 0;
             end
             
-
             % might speed things up a bit to assign these to separate variables (matlab is a bit lame)
             datasource = cv.datasource;
             feature_preprocessors = cv.feature_preprocessors;
@@ -406,28 +391,20 @@ classdef standard_resample_CV
                     if iResample == 1, disp('Starting decoding analysis'), end
                 end
 
-
                 % get the data from the datasource
                 [all_XTr all_YTr all_XTe all_YTe] = datasource.get_data;  
 
-
                 % pre-allocating memory for saving stdev.all_single_CV_vals_combined
                 if test_only_at_training_times == 1
-                    curr_total_CV_zero_one_loss_results = cell(size(all_XTr, 2), 1);
-                    curr_total_CV_normalized_rank_results = cell(size(all_XTr, 2), 1);
-                    curr_total_CV_decision_values_results = cell(size(all_XTr, 2), 1);                   
+                  col_size = 1;
                 else
-                    curr_total_CV_zero_one_loss_results = cell(size(all_XTr, 2), size(all_XTe, 2));
-                    curr_total_CV_normalized_rank_results = cell(size(all_XTr, 2), size(all_XTe, 2));
-                    curr_total_CV_decision_values_results = cell(size(all_XTr, 2), size(all_XTe, 2));
+                  col_size = size(all_XTe, 2);
                 end
                 
-                
-                
+                [curr_total_CV_zero_one_loss_results, curr_total_CV_normalized_rank_results, curr_total_CV_decision_values_results]= deal(cell(size(all_XTr, 2), col_size));
                 
                  % run through all the CV trials first
                 for iCV = 1:size(all_XTr{1}, 2)
-
 
                     for iTrainingInterval = 1:size(all_XTr, 2)
 
@@ -440,15 +417,12 @@ classdef standard_resample_CV
                                 YTr = all_YTr;
                             end
                             
-                            
                             % apply preprocessing to the training data 
                             if ~isempty(cv.feature_preprocessors)
                                 for iFP = 1:length(cv.feature_preprocessors)
                                     
-                                    
                                     [feature_preprocessors{iFP} XTr] = feature_preprocessors{iFP}.set_properties_with_training_data(XTr, YTr);  % save FP parameters and get normalized XTr
                   
-                                    
                                     % save preprocessing information (if the user has specified that such information should be saved)
 
                                       %  [could make the method get_current_info_to_save as not required in the FP interface, 
@@ -457,30 +431,34 @@ classdef standard_resample_CV
                                                                                                              
                                     curr_FP_info_to_save = feature_preprocessors{iFP}.get_current_info_to_save;
                                     if ~isempty(curr_FP_info_to_save)
-                                        %field_names = fields(curr_FP_info_to_save);  
-                                         field_names = fieldnames(curr_FP_info_to_save);  % changed this to make the code compartible with Octave
-                                        for iFieldName = 1:length(field_names)
-                                            
-                                            eval(['curr_FP_data_to_save_one_field = curr_FP_info_to_save.' field_names{iFieldName} ';']); 
-
-                                            if isnumeric(curr_FP_data_to_save_one_field)
-                                                eval(['DECODING_RESULTS.FP_INFO{iFP}.'  field_names{iFieldName} '(iResample, iCV, iTrainingInterval, :) = curr_FP_data_to_save_one_field;']);    % will have to modify this slightly if returning a matrix, etc..
-                                            else
-                                                eval(['DECODING_RESULTS.FP_INFO{iFP}.'  field_names{iFieldName} '{iResample, iCV, iTrainingInterval} = curr_FP_data_to_save_one_field;']); 
-                                            end
-                                            
+                                      switch whatui
+                                        case 'Matlab'
+                                          field_names = fields(curr_FP_info_to_save);
+                                        case 'Octave'
+                                          field_names = fieldnames(curr_FP_info_to_save);  
+                                      end
+                                      
+                                      for iFieldName = 1:length(field_names)
+                                        curr_FP_data_to_save_one_field = curr_FP_info_to_save.(field_names{iFieldName});
+                                        if isnumeric(curr_FP_data_to_save_one_field)
+                                          DECODING_RESULTS.FP_INFO{iFP}.(field_names{iFieldName})(iResample, iCV, iTrainingInterval, :) = curr_FP_data_to_save_one_field;  % will have to modify this slightly if returning a matrix, etc..
+                                        else
+                                          DECODING_RESULTS.FP_INFO{iFP}.(field_names{iFieldName}){iResample, iCV, iTrainingInterval} = curr_FP_data_to_save_one_field;
                                         end
+                                      end
                                     end
-
-                                     
+                                    
                                 end
                             end   % end preprocessing training code
                                                      
-                            
-                            
                             % train the classifier 
                             classifier = classifier.train(XTr, YTr);   
                             
+                            % Plot the templates, if you'd like to see them
+%                             figure()
+%                             hold on
+%                             arrayfun(@(x) plot(1:length(classifier.templates), classifier.templates(:,x)), 1:length(classifier.labels))
+%                             legend(num2str(classifier.labels));
                             
                             % if one wants to only test at the same time points that were used for training (to speed things up)
                             if test_only_at_training_times == 1
@@ -488,7 +466,6 @@ classdef standard_resample_CV
                             else
                                 test_interval = 1:size(all_XTe, 2);   % otherwise create full TCT matrix
                             end
-
                             
                             % run through each test time bin and evaluate how good the decoding accuracy is
                             for iTestInterval = test_interval    
@@ -499,7 +476,6 @@ classdef standard_resample_CV
                                     iTestIntervalSaveInd = iTestInterval;
                                 end
                                 
-                                
                                 % current test data
                                 XTe = all_XTe{iTestInterval}{iCV};
                                 
@@ -508,7 +484,6 @@ classdef standard_resample_CV
                                 else
                                     YTe = all_YTe;
                                 end
-
                                 
                                 % apply feature preprocessing to the test data
                                 if ~isempty(cv.feature_preprocessors)
@@ -516,26 +491,21 @@ classdef standard_resample_CV
                                         XTe = feature_preprocessors{iFP}.preprocess_test_data(XTe);                     
                                     end
                                 end
-
-
+                                
                                 % test the classifier
                                 [predicted_labels decision_values] = classifier.test(XTe);
-
-
+                                
                                 % store information for creating a confusion matrix
                                 if cv.confusion_matrix_params.create_confusion_matrix  
                                     all_predicted_labels_for_confusion_matrix_and_MI(iResample, iCV, :, iTrainingInterval, iTestIntervalSaveInd) = predicted_labels;
                                 end
-
                                 
                                 % save the zero-one loss results
                                 DECODING_RESULTS.ZERO_ONE_LOSS_RESULTS.decoding_results(iResample, iCV, iTrainingInterval, iTestIntervalSaveInd, :) = ((length(find(predicted_labels - YTe == 0))/length(predicted_labels)));  
-                               
                                 
                                 % storing stdevs of single 0-1 classifier results
                                 DECODING_RESULTS.ZERO_ONE_LOSS_RESULTS.stdev.all_single_CV_vals(iResample, iCV, iTrainingInterval, iTestIntervalSaveInd) = std(~((predicted_labels - YTe) == 0));   % can also be calculated analytically from decoding_results using p(1-p) binomial variance formula
                                 curr_total_CV_zero_one_loss_results{iTrainingInterval,iTestIntervalSaveInd} = [curr_total_CV_zero_one_loss_results{iTrainingInterval,iTestIntervalSaveInd}; ~((predicted_labels - YTe) == 0)];
-
                                 
                                 % save the rank_results and/or the decison values...                             
                                 if (cv.save_results.decision_values == 1) ||  (cv.save_results.normalized_rank == 1)
@@ -550,10 +520,8 @@ classdef standard_resample_CV
                                         end
                                     end
                                         
-
                                     % get the normalized rank results, the decision values for the correct class, and rank confusion matrix information                                    
                                     [curr_correct_class_decision_values curr_normalized_rank_results curr_rank_confusion_matrix] = cv.get_rank_and_decision_value_results(YTe, classifier.labels, decision_values, get_confusion_matrix_info);
-                                    
                                     
                                    if cv.save_results.normalized_rank == 1
                                     
@@ -590,14 +558,12 @@ classdef standard_resample_CV
                                         
                                    end  % end save rank results
                                        
-                                    
                                     % save decision value information
                                     if cv.save_results.decision_values == 1
                                         DECODING_RESULTS.DECISION_VALUES.decoding_results(iResample, iCV, iTrainingInterval, iTestIntervalSaveInd) = mean(curr_correct_class_decision_values);  
                                         DECODING_RESULTS.DECISION_VALUES.stdev.all_single_CV_vals(iResample, iCV, iTrainingInterval, iTestIntervalSaveInd) = std(curr_correct_class_decision_values);
                                         curr_total_CV_decision_values_results{iTrainingInterval,iTestIntervalSaveInd} = [curr_total_CV_decision_values_results{iTrainingInterval,iTestIntervalSaveInd}; curr_correct_class_decision_values'];
                                     end
-                                    
                                     
                                     if cv.save_results.extended_decision_values == 1
                                         DECODING_RESULTS.DECISION_VALUES.classifier_decision_values(iResample, iCV, :, iTrainingInterval, iTestIntervalSaveInd) = curr_correct_class_decision_values;  
@@ -609,11 +575,7 @@ classdef standard_resample_CV
                                         DECODING_RESULTS.DECISION_VALUES.all_classifier_decision_labels(iResample, iCV, :, iTrainingInterval, iTestIntervalSaveInd) = YTe;  
                                     end
 
-                                    
                                 end  % end for saving rank results and/or decision values
-
-
-                                
 
                                 % save area under ROC curve results
                                 if (cv.save_results.ROC_AUC == 1) || (cv.save_results.ROC_AUC == 2) || (cv.save_results.ROC_AUC == 3)
@@ -647,23 +609,11 @@ classdef standard_resample_CV
                                     
                                 end  % end save ROC results
 
-
-                                
-                                
-
                             end  % end for the test time periods
 
-                            
-                            
                     end  % end for the train time periods
 
-
-                    
                 end  % end for the CV blocks
-                
-
-                
-                
                 
                 % save more measures of decoding result variability
                 for iTrainingInterval = 1:size(all_XTr, 2)
@@ -715,9 +665,6 @@ classdef standard_resample_CV
                     
                 end  % end saving more measure of decoding variability 
                 
-                
-                
-   
                 % save some results for creating the rank confusion matrix
                 % normalizing the rank confusion matrix so that each column (actual label) contains the real normalized rank values (i.e., values in the range [0 1])
                 if (cv.save_results.normalized_rank == 1) && (cv.confusion_matrix_params.create_confusion_matrix == 1) 
@@ -741,7 +688,6 @@ classdef standard_resample_CV
 
                 end
 
-                
                 % get convergence values for all the decoding results that are being saved
                if iResample > 1 
                     %result_types = fields(DECODING_RESULTS);
@@ -772,8 +718,6 @@ classdef standard_resample_CV
                     convergence_values = []; % set to empty if on first resample run
                end  % end for getting the convergence values
 
-               
-               
                  % display progress of decoding procedure...
                  if cv.display_progress.resample_run_time  == 1
                      
@@ -817,10 +761,6 @@ classdef standard_resample_CV
                      
                  end
           
-  
-                 
-    
-                 
                  % check if the criteria are met to stop doing resample runs (i.e, at least num_resample runs have been completed and the results have converged)
                  
                  % stop running the resample loop if the minimum number of resample runs has been completed and the results have converged.
@@ -861,18 +801,12 @@ classdef standard_resample_CV
                         minimum_resample_runs_executed_and_results_have_converged = 0;
                      end
                      
-                     
-                     
-                     
                      % display convergence properies
                      if (cv.display_progress.convergence_values == 1) && iResample > 1                                             
                          fprintf('\n%s\n\n', convergence_display_string)   
                      end
 
-                     
                  end   % end for checking if the results have converged 
-                 
-
                  
                  % display the progress of the results (made this a separate function to make code easier to read  - hopefully this will not slow things down too much passing DECODING_RESULTS as an argument)
                  if (cv.display_progress.zero_one_loss + cv.display_progress.normalized_rank + cv.display_progress.decision_values + cv.display_progress.separate_CV_ROC_results + cv.display_progress.combined_CV_ROC_results) > 0
@@ -886,12 +820,8 @@ classdef standard_resample_CV
 
                  end
                  
-                 
-                
              end  % end for the current resample data run
 
-
-            
             % save additional parameters about the decoding experiment
             % assuming length(YTe) etc. is always the same for all times (which I think has to be true)
             DECODING_RESULTS.CV_PARAMETERS.num_test_points_on_each_CV_run = length(YTe);     
@@ -919,12 +849,8 @@ classdef standard_resample_CV
             catch 
             end 
                
-            
-            
-            
             % save additional results (could have this code in the body of this method, but trying to make things more readable)
             DECODING_RESULTS = cv.save_more_decoding_measures(DECODING_RESULTS);
-            
             
             % create and confusion matrices and mutual information results                                       
             if (cv.confusion_matrix_params.create_confusion_matrix == 1) || (cv.confusion_matrix_params.create_all_test_points_separate_confusion_matrix == 1) || cv.save_results.mutual_information == 1
@@ -941,14 +867,9 @@ classdef standard_resample_CV
                
             end
   
-            
-
         end    % end run_cv_decoding
     
-        
- 
     end   % end public methods 
-    
     
     % should be a private method but for some reason Octave doesn't like when this is private (though Matlab is fine if it's private) so making it a public method :(
     methods (Access = 'public') 
@@ -967,7 +888,6 @@ classdef standard_resample_CV
         %[maximum_absolute_difference_between_mean_and_ith_deleted_result maximum_percentage_change_between_mean_and_ith_deleted_result] = get_convergence_values(cv, results_for_each_resample_run_averaged_over_CV_splits);
         
     end  % end private methods
-        
     
 end   % end class
 

@@ -39,10 +39,10 @@ classdef max_correlation_coefficient_CL
 %   XTr and XTe are in the form [num_features x num_examples]
 %   YTr is in the form [num_examples x 1]
 %
-
-
+%
+%
 %==========================================================================
-
+%
 %     This code is part of the Neural Decoding Toolbox.
 %     Copyright (C) 2011 by Ethan Meyers (emeyers@mit.edu)
 % 
@@ -58,25 +58,19 @@ classdef max_correlation_coefficient_CL
 % 
 %     You should have received a copy of the GNU General Public License
 %     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-    
+%    
 %==========================================================================    
-
-
-
 
   properties 
         templates = [];   % average of the training vectors for each class
         labels = [];  % all the unique labels for each class (one for each template)  
   end
 
-
-
     methods 
 
         % constructor 
         function cl = max_correlation_coefficient_CL
         end
-        
         
         function cl = train(cl, XTr, YTr)  
 
@@ -96,11 +90,8 @@ classdef max_correlation_coefficient_CL
             
         end
             
-
-        
         function [predicted_labels decision_values] = test(cl, XTe)
-        
-                  
+            
             if size(XTe, 1) > 1   % if each data point is only 1 dimensional (could return an error, but instead just returning the template that had the closest value)
            
                 % % use the corrcoef function to get the correlation coefficients
@@ -113,7 +104,6 @@ classdef max_correlation_coefficient_CL
                  normalization_matrix = sqrt(diag(mean_subtracted_templates' * mean_subtracted_templates)) * sqrt(diag(mean_subtracted_XTe' * XTe))';
                  template_corrcoeffs = ((mean_subtracted_templates' * mean_subtracted_XTe)./normalization_matrix)';
 
-            
             else   %  if there is only one feature, select the class with closest value to that feature
 
                 % the squared difference between each class mean and each test point  (which are both scalars)
@@ -121,16 +111,13 @@ classdef max_correlation_coefficient_CL
                 
             end
 
-            
             [val ind] = randmax(template_corrcoeffs');   % using randmax to deal with ties in max correlation value
             predicted_labels = cl.labels(ind);
             decision_values = template_corrcoeffs; 
 
-
             if (size(template_corrcoeffs, 1) .* size(template_corrcoeffs, 2)  ~= sum(sum(isfinite(template_corrcoeffs))))
                warning('this matrix contains some numbers that are not finite!!!')
             end
-            
             
         end
         

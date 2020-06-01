@@ -96,8 +96,6 @@ if nargin < 3 || (nargin == 3 && isempty(label_names_to_use))
   end
 end
 
-
-
 % create a [num_sites x num_labels_to_use] matrix called num_repeats_matrix that has how many times each each label was repeated for each site
 for iSite = 1:length(the_labels)                
     for iLabel = 1:length(label_names_to_use)         
@@ -119,6 +117,7 @@ inds_of_sites_with_at_least_k_repeats = find(min_num_repeats_all_sites >= k);
 
 % If you want to know how many of your units you can use, it is useful to
 % plot some distribution showing how many units you will have for each k.
+
 figure()
 sorted_min_reps = sort(min_num_repeats_all_sites);
 possible_k = 1:sorted_min_reps(end);
@@ -128,7 +127,13 @@ hold on
 plot([k k], ylim(), 'LineWidth', 3, 'color', 'r')
 xlabel('Possible Repeats of set')
 ylabel('Units with X Repeats')
-title(sprintf('Minimum Repeats per k selection: %d = %d units', k, possible_units(k)))
+
+if isempty(inds_of_sites_with_at_least_k_repeats)
+  title(sprintf('Minimum Repeats per k selection: Max k possible = %d', possible_k(end)))
+  error('Select lower k');
+else
+  title(sprintf('Minimum Repeats per k selection: %d = %d units', k, possible_units(k)))
+end
 
 
 % return the name of the labels that were used (useful if label_names_to_use was not an input parameter)
