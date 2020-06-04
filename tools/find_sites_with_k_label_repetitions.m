@@ -72,7 +72,6 @@ ignore_case_of_strings = 0;  % could make this an input argument, but not going 
 
 if nargin < 3 || (nargin == 3 && isempty(label_names_to_use))
   switch whatui
-    
     case 'Matlab'
       % Seems 'Union' does the below operation.
       if size(the_labels{1},1) > 1
@@ -114,26 +113,6 @@ else
 end
 
 inds_of_sites_with_at_least_k_repeats = find(min_num_repeats_all_sites >= k);
-
-% If you want to know how many of your units you can use, it is useful to
-% plot some distribution showing how many units you will have for each k.
-
-figure()
-sorted_min_reps = sort(min_num_repeats_all_sites);
-possible_k = 1:sorted_min_reps(end);
-possible_units = arrayfun(@(x) sum(sorted_min_reps >= possible_k(x)), possible_k);
-plot(possible_k, possible_units, 'color', 'k')
-hold on
-plot([k k], ylim(), 'LineWidth', 3, 'color', 'r')
-xlabel('Possible Repeats of set')
-ylabel('Units with X Repeats')
-
-if isempty(inds_of_sites_with_at_least_k_repeats)
-  title(sprintf('Minimum Repeats per k selection: Max k possible = %d', possible_k(end)))
-  error('Select lower k');
-else
-  title(sprintf('Minimum Repeats per k selection: %d = %d units', k, possible_units(k)))
-end
 
 
 % return the name of the labels that were used (useful if label_names_to_use was not an input parameter)

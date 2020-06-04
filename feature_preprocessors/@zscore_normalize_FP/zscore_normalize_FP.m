@@ -33,10 +33,10 @@ classdef zscore_normalize_FP
 %
 %  Note: X_data is in the form [num_features x num_examples] 
 %
-
-
+%
+%
 %==========================================================================
-
+%
 %     This code is part of the Neural Decoding Toolbox.
 %     Copyright (C) 2011 by Ethan Meyers (emeyers@mit.edu)
 % 

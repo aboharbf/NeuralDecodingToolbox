@@ -392,10 +392,10 @@ classdef standard_resample_CV
                 end
 
                 % get the data from the datasource
-                [all_XTr all_YTr all_XTe all_YTe] = datasource.get_data;  
+                [all_XTr, all_YTr, all_XTe, all_YTe] = datasource.get_data;  
 
                 % pre-allocating memory for saving stdev.all_single_CV_vals_combined
-                if test_only_at_training_times == 1
+                if test_only_at_training_times == 1 %#ok<*PROP>
                   col_size = 1;
                 else
                   col_size = size(all_XTe, 2);
@@ -421,7 +421,7 @@ classdef standard_resample_CV
                             if ~isempty(cv.feature_preprocessors)
                                 for iFP = 1:length(cv.feature_preprocessors)
                                     
-                                    [feature_preprocessors{iFP} XTr] = feature_preprocessors{iFP}.set_properties_with_training_data(XTr, YTr);  % save FP parameters and get normalized XTr
+                                    [feature_preprocessors{iFP}, XTr] = feature_preprocessors{iFP}.set_properties_with_training_data(XTr, YTr);  % save FP parameters and get normalized XTr
                   
                                     % save preprocessing information (if the user has specified that such information should be saved)
 
@@ -493,7 +493,7 @@ classdef standard_resample_CV
                                 end
                                 
                                 % test the classifier
-                                [predicted_labels decision_values] = classifier.test(XTe);
+                                [predicted_labels, decision_values] = classifier.test(XTe);
                                 
                                 % store information for creating a confusion matrix
                                 if cv.confusion_matrix_params.create_confusion_matrix  
@@ -521,7 +521,7 @@ classdef standard_resample_CV
                                     end
                                         
                                     % get the normalized rank results, the decision values for the correct class, and rank confusion matrix information                                    
-                                    [curr_correct_class_decision_values curr_normalized_rank_results curr_rank_confusion_matrix] = cv.get_rank_and_decision_value_results(YTe, classifier.labels, decision_values, get_confusion_matrix_info);
+                                    [curr_correct_class_decision_values, curr_normalized_rank_results, curr_rank_confusion_matrix] = cv.get_rank_and_decision_value_results(YTe, classifier.labels, decision_values, get_confusion_matrix_info);
                                     
                                    if cv.save_results.normalized_rank == 1
                                     
@@ -689,7 +689,7 @@ classdef standard_resample_CV
                 end
 
                 % get convergence values for all the decoding results that are being saved
-               if iResample > 1 
+                if iResample > 1 
                     %result_types = fields(DECODING_RESULTS);
                     result_types = fieldnames(DECODING_RESULTS);  % changed to make the code compartible with Octave
                     for iResultType = 1:length(result_types)
@@ -719,7 +719,7 @@ classdef standard_resample_CV
                end  % end for getting the convergence values
 
                  % display progress of decoding procedure...
-                 if cv.display_progress.resample_run_time  == 1
+                if cv.display_progress.resample_run_time  == 1
                      
                      reample_run_times(iResample) = toc;   % display how long a resample iteration took
                      
@@ -764,9 +764,9 @@ classdef standard_resample_CV
                  % check if the criteria are met to stop doing resample runs (i.e, at least num_resample runs have been completed and the results have converged)
                  
                  % stop running the resample loop if the minimum number of resample runs has been completed and the results have converged.
-                 if iResample < 2   
+                if iResample < 2   
                      
-                 else  % otherwise, see if the results have converged...
+                else  % otherwise, see if the results have converged...
                        
                      convergence_display_string = 'convergence values:  ';
                      
@@ -868,7 +868,7 @@ classdef standard_resample_CV
             end
   
         end    % end run_cv_decoding
-    
+
     end   % end public methods 
     
     % should be a private method but for some reason Octave doesn't like when this is private (though Matlab is fine if it's private) so making it a public method :(
