@@ -196,9 +196,6 @@ properties (GetAccess = 'public', SetAccess = 'private')
 end
 
 methods
-   
-  %function ds = basic_DS
-  %end
   
   % the constructor
   function ds = basic_DS(binned_data_name, specific_binned_label_name, num_cv_splits, load_data_as_spike_counts)
@@ -213,7 +210,7 @@ methods
         error('If the argument load_data_as_spike_counts is set to a value greater than 0, binned_data_name must be a string listing the name of a file that has data in binned format')
       end
       
-      [binned_data_spike_counts binned_labels binned_site_info] = load_binned_data_and_convert_firing_rates_to_spike_counts(binned_data_name);
+      [binned_data_spike_counts, binned_labels, binned_site_info] = load_binned_data_and_convert_firing_rates_to_spike_counts(binned_data_name);
       
       ds.the_data = binned_data_spike_counts;
       ds.binned_site_info = binned_site_info;
@@ -414,8 +411,7 @@ methods
       
     end   % end initialization
     
-    % access to objects' fields in matlab is very slow (which is super pathetic), so to get the code to run faster I have use temporary copies of the data
-    %  (hopefully matlab will fix this in the future)
+    % access to objects' fields in matlab is very slow, so to get the code to run faster I have use temporary copies of the data
     the_data = ds.the_data;
     the_labels = ds.the_labels;
     num_cv_splits = ds.num_cv_splits;
@@ -443,7 +439,6 @@ methods
       end
     end
     
-    
     if ~isempty(sites_to_exclude)      % can exclude specific neurons as well as specify which ones should be used
       sites_to_use = setdiff(sites_to_use, sites_to_exclude);
     end
@@ -456,32 +451,27 @@ methods
       end
     end
     
-    
     % more sanity checks
     if length(label_names_to_use) ~= length(unique(label_names_to_use))
       warning('some labels were listed twice in the field ds.label_names_to_use, (these duplicate enteries will be ignored)');
       label_names_to_use = unique(label_names_to_use);
     end
     
-    
     % making sure create_simultaneously_recorded_populations is a valid argument
     if (create_simultaneously_recorded_populations  > 2) || (create_simultaneously_recorded_populations  <  0)
       error('create_simultaneously_recorded_populations must be set to 0, 1 or 2');
     end
-    
     
     % if the number of resample neurons is not specified, use all neurons
     if num_resample_sites < 1
       num_resample_sites = length(sites_to_use);
     end
     
-    
     % code for randomly selecting k labels to use each time data is retrieved
     %if use_random_subset_of_k_labels_each_time_data_is_retrieved > 1   % needs at least 2 labels for a classification problem to work
     %       rand_label = label_names_to_use(randperm(length(label_names_to_use)));
     %       label_names_to_use = rand_label(1:use_random_subset_of_k_labels_each_time_data_is_retrieved);
     %end
-    
     
     % if specific sites to be used have not been given (as should usually be the case), randomly select some sites to use from the larger population
     if  length(curr_resample_sites_to_use) == 1 && (curr_resample_sites_to_use < 1) %isempty(curr_resample_sites_to_use)
@@ -497,37 +487,29 @@ methods
       
     end
     
-    
     % making code more robust in case transpose of curr_resample_sites_to_use is actually passed as an argument
     if (size(curr_resample_sites_to_use, 1) > 1)
       curr_resample_sites_to_use = curr_resample_sites_to_use';
     end
     
-    
     % pre-allocate memory
     all_data_point_labels = NaN .* ones(length(unique(label_names_to_use)) * num_cv_splits * num_times_to_repeat_each_label_per_cv_split, 1);
     start_boostrap_ind = 1;
-    
     
     % make sure label_names_to_use is a row vector
     if size(label_names_to_use, 1) > 1
       label_names_to_use = label_names_to_use';
     end
     
-    
-    
     if  create_simultaneously_recorded_populations == 0
-      
       
       % pre-allocate memory.
       the_resample_data = NaN .* ones(length(unique(label_names_to_use)) * num_cv_splits * num_times_to_repeat_each_label_per_cv_split, length(curr_resample_sites_to_use), size(the_data{1}, 2));
-      
       
       % if someone has changed the data or the labels after they have already set create_simultaneously_recorded_populations = 0, then the format of these variables needs to be converted back
       if ~(iscell(ds.the_data)) || ~(iscell(the_labels))
         create_simultaneously_recorded_populations = 0;
       end
-      
       
       % create a 3 dimensional tensor the_resample_data that is [(num_labels * num_cv_slits * num_repeats_per_cv_label)   x num_neurons x num_time_bins] large
       for iLabel = label_names_to_use
@@ -558,16 +540,11 @@ methods
           
         end    % end iNeuron
         
-        
         all_data_point_labels(start_boostrap_ind:(start_boostrap_ind + length(curr_trials_to_use) - 1)) = iLabel .* ones(length(start_boostrap_ind:(start_boostrap_ind + length(curr_trials_to_use) - 1)), 1);
         
         start_boostrap_ind = start_boostrap_ind + length(curr_trials_to_use);
         
-        
       end   % end for iLabel
-      
-      
-      
       
       % if creating simultaneously recorded populations ...
     elseif  create_simultaneously_recorded_populations > 0
@@ -576,7 +553,6 @@ methods
       the_resample_data = NaN .* ones(length(unique(label_names_to_use)) * num_cv_splits * num_times_to_repeat_each_label_per_cv_split, length(curr_resample_sites_to_use), size(the_data, 3));
       
       the_data = the_data(:, curr_resample_sites_to_use, :);
-      
       
       % choose (num_cv * num_repeats) random data points for each class
       for iLabel = label_names_to_use
@@ -600,15 +576,11 @@ methods
       
     end % end simultaneous populations
     
-    
-    
     clear the_data   % clear up some memory
-    
     
     all_resample_data_inds = 1:size(the_resample_data, 1);
     
     time_periods_to_get_data_from = ds.time_periods_to_get_data_from;
-    
     
     % convert the_resample_data into a training and splits
     for iTimePeriod = 1:length(time_periods_to_get_data_from)
@@ -616,12 +588,10 @@ methods
       curr_data = the_resample_data(:, :, time_periods_to_get_data_from{iTimePeriod});
       the_resample_data_time = reshape(curr_data, [size(curr_data, 1) size(curr_data, 2) * size(curr_data, 3)]);
       
-      
       if (create_simultaneously_recorded_populations > 1)
         the_site_ids = 1:size(curr_data, 2);
         simul_to_pseudo_feature_to_siteID_mapping{iTimePeriod} = repmat(the_site_ids, [1 size(curr_data, 3)]);
       end
-      
       
       cv_start_ind = 1;
       
@@ -634,8 +604,6 @@ methods
           curr_cv_inds  = [curr_cv_inds cv_start_ind:(num_cv_splits  * num_times_to_repeat_each_label_per_cv_split):size(the_resample_data, 1)];
           cv_start_ind = cv_start_ind + 1;
         end
-        
-        
         
         % these cells arrays contain the data for each CV splits separately,
         % but don't need to create these, rather this function will just return the CV data divided into training and test sets
@@ -655,12 +623,9 @@ methods
         YTr_all = all_data_point_labels(setdiff(all_resample_data_inds, curr_cv_inds));
         YTe_all = all_data_point_labels(curr_cv_inds);
         
-        
       end
       
     end
-    
-    
     
     % If create_simultaneously_recorded_populations == 2, create pseudo-populations for training, and simultaneous data for testing.
     % This is useful for assessing I_diag as described by Averbeck, Latham and Pouget, Nature Neurosience, May 2006.

@@ -644,7 +644,6 @@ classdef standard_resample_CV
                             DECODING_RESULTS.DECISION_VALUES.stdev.all_single_CV_vals_combined(iResample, iTrainingInterval, iTestIntervalSaveInd) = std(curr_total_CV_decision_values_results{iTrainingInterval, iTestIntervalSaveInd});
                             DECODING_RESULTS.DECISION_VALUES.stdev.over_CVs(iResample, iTrainingInterval, iTestIntervalSaveInd) = std(squeeze(DECODING_RESULTS.DECISION_VALUES.decoding_results(iResample, :, iTrainingInterval, iTestIntervalSaveInd)));
                         end
-                       
                         
                         if (save_roc_auc == 1) || (save_roc_auc == 2) || (save_roc_auc == 3)  
                             if (save_roc_auc == 1) || (save_roc_auc == 2)
@@ -654,7 +653,6 @@ classdef standard_resample_CV
                                 % save combined stdev over classes
                                 DECODING_RESULTS.ROC_AUC_RESULTS.combined_CV_ROC_results.stdev.over_classes(iResample, iTrainingInterval, iTestIntervalSaveInd)  = std(squeeze(DECODING_RESULTS.ROC_AUC_RESULTS.combined_CV_ROC_results.decoding_results(iResample, :, iTrainingInterval, iTestIntervalSaveInd)));
                             end
-                                
                             % save separate stdevs
                             if (save_roc_auc == 1) || (save_roc_auc == 3)
                                 DECODING_RESULTS.ROC_AUC_RESULTS.separate_CV_ROC_results.stdev.over_CVs(iResample, iTrainingInterval, iTestIntervalSaveInd) = std(squeeze(mean(DECODING_RESULTS.ROC_AUC_RESULTS.separate_CV_ROC_results.decoding_results(iResample, :, :, iTrainingInterval, iTestIntervalSaveInd), 2)));
