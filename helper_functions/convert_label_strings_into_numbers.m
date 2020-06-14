@@ -33,10 +33,10 @@ function [specific_binned_labels_as_numbers string_to_number_mapping] = convert_
 %    2. string_to_number_mapping: the order in which strings have been mapped into numbers, i.e., the string string_to_number_mapping{7} will have been
 %        mapped to the number 7 in the specific_binned_labels_as_numbers{iSite} vector.
 %
-
-
+%
+%
 %==========================================================================
-
+%
 %     This code is part of the Neural Decoding Toolbox.
 %     Copyright (C) 2011 by Ethan Meyers (emeyers@mit.edu)
 % 
@@ -52,32 +52,35 @@ function [specific_binned_labels_as_numbers string_to_number_mapping] = convert_
 % 
 %     You should have received a copy of the GNU General Public License
 %     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-    
+%    
 %==========================================================================    
-
-
-
 
 % default is to give strings will different capitalization unique numbers
 if nargin < 2 || isempty(ignore_case_of_strings)
     ignore_case_of_strings = 0;
 end
 
-
 % get all the unique label names
 all_unique_names = [];
-for iSite = 1:length(specific_binned_labels_as_strings)
-    
-    if ignore_case_of_strings == 1
+switch whatui
+  case 'Octave'
+    for iSite = 1:length(specific_binned_labels_as_strings)
+      
+      if ignore_case_of_strings == 1
         specific_binned_labels_as_strings{iSite} = lower(specific_binned_labels_as_strings{iSite});
+      end
+      
+      curr_unique_names = unique(specific_binned_labels_as_strings{iSite});
+      all_unique_names = union(all_unique_names, curr_unique_names);
     end
-        
-    curr_unique_names = unique(specific_binned_labels_as_strings{iSite});    
-    all_unique_names = union(all_unique_names, curr_unique_names);
-       
+  case 'Matlab'
+    % Seems 'Union' does the below operation.
+    if size(specific_binned_labels_as_strings{1},1) > 1
+      all_unique_names = unique(vertcat(specific_binned_labels_as_strings{:}));
+    else
+      all_unique_names = unique([specific_binned_labels_as_strings{:}]);
+    end
 end
-
-
 
 % if string_to_number_mapping has been given as an input argument then use that mapping, otherwise use the mapping creating by finding all the unique labels
 if ~exist('string_to_number_mapping') || isempty(string_to_number_mapping)
@@ -99,9 +102,6 @@ else
         
 end
 
-
-
-
 % convert the specific binned labels as strings into specific binned labels as numbers
 for iSite = 1:length(specific_binned_labels_as_strings)
        
@@ -112,8 +112,6 @@ for iSite = 1:length(specific_binned_labels_as_strings)
     end
     
 end
-
-
 
 % if string_to_number_mapping has been given as an input (i.e., nargin = 3), 
 %  and there are some names in string_to_number_mapping that are not in the_labels, give an error message

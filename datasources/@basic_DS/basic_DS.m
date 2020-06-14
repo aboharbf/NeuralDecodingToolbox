@@ -225,7 +225,7 @@ methods
     end
     
     if isstr(specific_binned_label_name)
-      ds.the_labels = eval(['binned_labels.' specific_binned_label_name]);
+      ds.the_labels = binned_labels.(specific_binned_label_name);
     else
       ds.the_labels = specific_binned_label_name;
     end
@@ -273,13 +273,13 @@ methods
   function  [XTr_all_time_cv YTr_all XTe_all_time_cv YTe_all] = get_data(ds)
     % The main DS function that returns training and test population vectors.  The outputs of this function are:
     %
-    %  1. XTr_all_time_cv{iTime}{iCV} = [num_features x num_training_points] is a
-    %        cell array that has the training data for all times and cross-validation splits
+    %  1. XTr_all_time_cv{iTime}{iCV} = [num_features/num_sites x num_training_points] is a
+    %     cell array that has the training data for all times and cross-validation splits
     %
     %  2. YTr_all{iTime} = [num_training_point x 1] has the training labels
     %
     %  3. XTe_all_time_cv{iTime}{iCV} = [num_features x num_test_points] is a
-    %       cell array that has the test data for all times and cross-validation splits
+    %     cell array that has the test data for all times and cross-validation splits
     %
     %  4. YTe_all{iTime} = [num_test_point x 1] has the test labels
     %
@@ -503,15 +503,13 @@ methods
     
     if  create_simultaneously_recorded_populations == 0
       
-      % pre-allocate memory.
-      the_resample_data = NaN .* ones(length(unique(label_names_to_use)) * num_cv_splits * num_times_to_repeat_each_label_per_cv_split, length(curr_resample_sites_to_use), size(the_data{1}, 2));
-      
       % if someone has changed the data or the labels after they have already set create_simultaneously_recorded_populations = 0, then the format of these variables needs to be converted back
       if ~(iscell(ds.the_data)) || ~(iscell(the_labels))
         create_simultaneously_recorded_populations = 0;
       end
       
       % create a 3 dimensional tensor the_resample_data that is [(num_labels * num_cv_slits * num_repeats_per_cv_label)   x num_neurons x num_time_bins] large
+      the_resample_data = NaN .* ones(length(unique(label_names_to_use)) * num_cv_splits * num_times_to_repeat_each_label_per_cv_split, length(curr_resample_sites_to_use), size(the_data{1}, 2));
       for iLabel = label_names_to_use
         
         cNeuron = 1;
@@ -531,7 +529,6 @@ methods
             curr_trials_to_use = curr_trials_to_use(1:(num_cv_splits  * num_times_to_repeat_each_label_per_cv_split));
           end
           
-          
           % put everything into the correct number of CV splits
           for iRepeats = 1:length(find(curr_resample_sites_to_use == iNeuron))
             the_resample_data(start_boostrap_ind:(start_boostrap_ind + length(curr_trials_to_use) - 1), cNeuron, :) = the_data{iNeuron}(curr_trials_to_use, :);
@@ -546,9 +543,8 @@ methods
         
       end   % end for iLabel
       
-      % if creating simultaneously recorded populations ...
+    % if creating simultaneously recorded populations ...
     elseif  create_simultaneously_recorded_populations > 0
-      
       
       the_resample_data = NaN .* ones(length(unique(label_names_to_use)) * num_cv_splits * num_times_to_repeat_each_label_per_cv_split, length(curr_resample_sites_to_use), size(the_data, 3));
       
@@ -583,6 +579,8 @@ methods
     time_periods_to_get_data_from = ds.time_periods_to_get_data_from;
     
     % convert the_resample_data into a training and splits
+    [XTr_all_time_cv, XTe_all_time_cv] = deal(cell(1, length(time_periods_to_get_data_from)));
+    [XTr_all_time_cv{:}, XTe_all_time_cv{:}] = deal(cell(1, num_cv_splits));
     for iTimePeriod = 1:length(time_periods_to_get_data_from)
       
       curr_data = the_resample_data(:, :, time_periods_to_get_data_from{iTimePeriod});
@@ -619,13 +617,14 @@ methods
         %YTr_all{iTimePeriod} = all_data_point_labels(setdiff(all_resample_data_inds, curr_cv_inds));
         %YTe_all{iTimePeriod} = all_data_point_labels(curr_cv_inds);
         
-        % might as well return these as vectors (rather than cell arrays) since they are the same at all time periods
-        YTr_all = all_data_point_labels(setdiff(all_resample_data_inds, curr_cv_inds));
-        YTe_all = all_data_point_labels(curr_cv_inds);
-        
       end
       
     end
+    
+    % might as well return these as vectors (rather than cell arrays) since they are the same at all time periods
+    % Moved outside of the 2 nested loops given that it doesn't change.
+    YTr_all = all_data_point_labels(setdiff(all_resample_data_inds, curr_cv_inds));
+    YTe_all = all_data_point_labels(curr_cv_inds);
     
     % If create_simultaneously_recorded_populations == 2, create pseudo-populations for training, and simultaneous data for testing.
     % This is useful for assessing I_diag as described by Averbeck, Latham and Pouget, Nature Neurosience, May 2006.

@@ -24,7 +24,6 @@ classdef max_correlation_coefficient_CL
 %           predicted label for a test point is the class that had the largest corrcoef
 %           value with the test point, and the decision values are the actually corrcoef values.
 %
-%
 %  Notes:  
 %    1.  If there is only one feature in XTr and XTe, then the prediction 
 %         is made based on the negative of the squared difference between the test
@@ -38,8 +37,6 @@ classdef max_correlation_coefficient_CL
 %
 %   XTr and XTe are in the form [num_features x num_examples]
 %   YTr is in the form [num_examples x 1]
-%
-%
 %
 %==========================================================================
 %

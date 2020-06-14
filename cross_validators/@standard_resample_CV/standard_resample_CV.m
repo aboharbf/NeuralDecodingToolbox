@@ -316,6 +316,7 @@ classdef standard_resample_CV
 %     You should have received a copy of the GNU General Public License
 %     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 %
+%#ok<*PROP>
 %==========================================================================   
 
     properties 
@@ -395,7 +396,7 @@ classdef standard_resample_CV
                 [all_XTr, all_YTr, all_XTe, all_YTe] = datasource.get_data;  
 
                 % pre-allocating memory for saving stdev.all_single_CV_vals_combined
-                if test_only_at_training_times == 1 %#ok<*PROP>
+                if test_only_at_training_times == 1
                   col_size = 1;
                 else
                   col_size = size(all_XTe, 2);
@@ -454,12 +455,14 @@ classdef standard_resample_CV
                             % train the classifier 
                             classifier = classifier.train(XTr, YTr);   
                             
-                            % Plot the templates, if you'd like to see them
-%                             figure()
-%                             hold on
-%                             arrayfun(@(x) plot(1:length(classifier.templates), classifier.templates(:,x)), 1:length(classifier.labels))
-%                             legend(num2str(classifier.labels));
-                            
+                            %Plot the templates, if you'd like to see them
+                            plot_templates = 0;
+                            if plot_templates
+                              figure()
+                              hold on
+                              arrayfun(@(x) plot(1:length(classifier.templates), classifier.templates(:,x)), 1:length(classifier.labels))
+                              legend(num2str(classifier.labels));
+                            end
                             % if one wants to only test at the same time points that were used for training (to speed things up)
                             if test_only_at_training_times == 1
                                 test_interval = iTrainingInterval;
