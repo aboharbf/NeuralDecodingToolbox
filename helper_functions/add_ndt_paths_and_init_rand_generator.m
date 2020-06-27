@@ -3,9 +3,9 @@ function add_ndt_paths_and_init_rand_generator
 % This function adds all the appropriate directories for the NDT toolbox to work
 %   and initializes the random number generator based on the clock (by default
 %   Matlab uses the same seed everything it is started which can lead to unwanted behavior).
-
+%
 %==========================================================================
-
+%
 %     This code is part of the Neural Decoding Toolbox.
 %     Copyright (C) 2011 by Ethan Meyers (emeyers@mit.edu)
 % 
@@ -21,15 +21,12 @@ function add_ndt_paths_and_init_rand_generator
 % 
 %     You should have received a copy of the GNU General Public License
 %     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-    
+%   
 %==========================================================================   
 
-
-
-
-
-% file the path where the toolbox is 
-toolbox_basedir_name = [fileparts(which('add_ndt_paths_and_init_rand_generator')) '/']
+% file the path where the toolbox is
+tmp = strsplit(which('add_ndt_paths_and_init_rand_generator'), filesep);
+toolbox_basedir_name = [ strjoin(tmp(1:end-2), filesep) filesep];
 
 % add all the appropriate sub-directories
 addpath([toolbox_basedir_name 'datasources/']);
@@ -40,9 +37,9 @@ addpath([toolbox_basedir_name 'tools/']);
 addpath([toolbox_basedir_name 'helper_functions/']);
 addpath(genpath([toolbox_basedir_name 'external_libraries/']));  % include subdirectories of any external libraries   
 
-if isOctave
+if strcmp(whatui, 'Octave')
     addpath([toolbox_basedir_name 'octave_code/']);
-    'Running Octave - adding Octave specific code to the search path'
+    disp('Running Octave - adding Octave specific code to the search path');
 end
     
 % initialize the random number generator

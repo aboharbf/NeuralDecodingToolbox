@@ -121,7 +121,7 @@ the_cross_validator.num_resample_runs = 2;  % usually more than 2 resample runs 
 %log_code_obj.log_current_file; 
 
 % run the decoding analysis 
-DECODING_RESULTS = the_cross_validator.run_cv_decoding; 
+DECODING_RESULTS = the_cross_validator.run_cv_decoding;
 
 %%  11.  Save the results
 
