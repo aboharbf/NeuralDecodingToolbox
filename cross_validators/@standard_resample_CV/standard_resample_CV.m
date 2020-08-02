@@ -431,14 +431,9 @@ classdef standard_resample_CV
                                       %    but going to keep it a required part of the interface for now]
                                                                                                              
                                     curr_FP_info_to_save = feature_preprocessors{iFP}.get_current_info_to_save;
+                                    
                                     if ~isempty(curr_FP_info_to_save)
-                                      switch whatui
-                                        case 'Matlab'
-                                          field_names = fields(curr_FP_info_to_save);
-                                        case 'Octave'
-                                          field_names = fieldnames(curr_FP_info_to_save);  
-                                      end
-                                      
+                                      field_names = fieldnames(curr_FP_info_to_save);
                                       for iFieldName = 1:length(field_names)
                                         curr_FP_data_to_save_one_field = curr_FP_info_to_save.(field_names{iFieldName});
                                         if isnumeric(curr_FP_data_to_save_one_field)
@@ -694,21 +689,27 @@ classdef standard_resample_CV
                     %result_types = fields(DECODING_RESULTS);
                     result_types = fieldnames(DECODING_RESULTS);  % changed to make the code compartible with Octave
                     for iResultType = 1:length(result_types)
+                      
+                        if strcmp(result_types{iResultType}, 'FP_INFO')
+                          continue;
+                        end
 
                         if ~strcmp(result_types{iResultType}, 'ROC_AUC_RESULTS')
-                            eval(['[max_absolute_diff_ith_deleted percent_change_relative_to_max_ith_deleted] = cv.get_convergence_values(squeeze(mean(DECODING_RESULTS.' result_types{iResultType} '.decoding_results, 2)));'])
-                            eval(['convergence_values.' lower(result_types{iResultType}) ' = [max_absolute_diff_ith_deleted percent_change_relative_to_max_ith_deleted];'])
-                            if strcmp(result_types{iResultType}, 'ZERO_ONE_LOSS_RESULTS'), convergence_values.zero_one_loss_results(1) = convergence_values.zero_one_loss_results(1) .* 100; end    
+                            [max_absolute_diff_ith_deleted, percent_change_relative_to_max_ith_deleted] = cv.get_convergence_values(squeeze(mean(DECODING_RESULTS.(result_types{iResultType}).decoding_results, 2)));
+                            convergence_values.(lower(result_types{iResultType})) = [max_absolute_diff_ith_deleted percent_change_relative_to_max_ith_deleted];
+                            if strcmp(result_types{iResultType}, 'ZERO_ONE_LOSS_RESULTS') 
+                              convergence_values.zero_one_loss_results(1) = convergence_values.zero_one_loss_results(1) .* 100;
+                            end    
 
                         else
                             if isfield(DECODING_RESULTS.ROC_AUC_RESULTS', 'separate_CV_ROC_results')
                                 results_for_each_resample_run_averaged_over_CV_splits = (squeeze(mean(DECODING_RESULTS.ROC_AUC_RESULTS.combined_CV_ROC_results.decoding_results, 2))); % AUROC combined CV values
-                                [max_absolute_diff_ith_deleted percent_change_relative_to_max_ith_deleted] = cv.get_convergence_values(results_for_each_resample_run_averaged_over_CV_splits);
+                                [max_absolute_diff_ith_deleted, percent_change_relative_to_max_ith_deleted] = cv.get_convergence_values(results_for_each_resample_run_averaged_over_CV_splits);
                                 convergence_values.separate_CV_ROC_result = [max_absolute_diff_ith_deleted percent_change_relative_to_max_ith_deleted];        
                             end
                             if isfield(DECODING_RESULTS.ROC_AUC_RESULTS', 'combined_CV_ROC_results')
                                 results_for_each_resample_run_averaged_over_CV_splits = (squeeze(mean(mean(DECODING_RESULTS.ROC_AUC_RESULTS.separate_CV_ROC_results.decoding_results, 3), 2))); % AUROC separate CV values
-                                [max_absolute_diff_ith_deleted percent_change_relative_to_max_ith_deleted] = cv.get_convergence_values(results_for_each_resample_run_averaged_over_CV_splits);
+                                [max_absolute_diff_ith_deleted, percent_change_relative_to_max_ith_deleted] = cv.get_convergence_values(results_for_each_resample_run_averaged_over_CV_splits);
                                 convergence_values.combined_CV_ROC_results = [max_absolute_diff_ith_deleted percent_change_relative_to_max_ith_deleted];        
                             end
                         end

@@ -282,7 +282,6 @@ methods
     %     cell array that has the test data for all times and cross-validation splits
     %
     %  4. YTe_all{iTime} = [num_test_point x 1] has the test labels
-    %
     
     % initialize variables the first time ds.get_data is called
     if ds.initialized == 0
