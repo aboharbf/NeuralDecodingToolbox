@@ -333,15 +333,17 @@ classdef k_aid_app_exported < matlab.apps.AppBase
       analysisStruct.k_repeats_needed = app.krepeatsneededEditField.Value;
       analysisStruct.plotTitle = app.ClassificationofEditField.Value;
       analysisStruct.save_extra_preprocessing_info = app.reportEditField.Value;
-      assert(length(app.available_sites) == app.UnitsavailableEditField.Value)
+      analysisStruct.editFieldEnabled = app.editFieldEnabled;
       
-      var2save = app.editFieldEnabled - 1;
+      assert(length(app.available_sites) == app.UnitsavailableEditField.Value, 'Difficulty with unit field')
+      
+      var2save = app.editFieldEnabled;
       
       % Add in variables depending on which analyses were specified.
       % Feature preprocessors
-      preprocList = {'pvalue_threshold', 'num_features_to_use', 'num_features_to_exclude'};
-      preprocParamValList = [app.pthresholdEditField.Value, app.kincludeEditField.Value, app.kexcludeEditField.Value];
-      for pp_i = 1:length(app.editFieldEnabled)
+      preprocList = {'num_features_to_use', 'num_features_to_exclude', 'pvalue_threshold'};
+      preprocParamValList = [app.kincludeEditField.Value, app.kexcludeEditField.Value, app.pthresholdEditField.Value];
+      for pp_i = 1:length(preprocList)
         if var2save(pp_i)
           analysisStruct.(preprocList{pp_i}) = preprocParamValList(pp_i);
         end
@@ -385,10 +387,11 @@ classdef k_aid_app_exported < matlab.apps.AppBase
       
       tmp1 = any(strcmp(value, 'select_pvalue_significant_features_FP'));
       tmp2 = any(strcmp(value, 'select_or_exclude_top_k_features_FP'));
-      app.editFieldEnabled = [tmp1 tmp2 tmp2] + 1;
+      app.editFieldEnabled = [tmp2 tmp2 tmp1];
+      varInd = [tmp2 tmp2 tmp1] + 1;
       editFieldOptions = {'off', 'on'};
       
-      [app.pthresholdEditField.Enable, app.kincludeEditField.Enable, app.kexcludeEditField.Enable] = deal(editFieldOptions{app.editFieldEnabled});
+      [app.kincludeEditField.Enable, app.kexcludeEditField.Enable, app.pthresholdEditField.Enable] = deal(editFieldOptions{varInd});
       
     end
 
@@ -441,6 +444,7 @@ classdef k_aid_app_exported < matlab.apps.AppBase
           app.krepeatsneededEditField.Value = prevAnalysis.k_repeats_needed;
         end
         
+        app.update_k_curve()
         assert(length(app.available_sites) == app.UnitsavailableEditField.Value)
         
         preprocList = {'pvalue_threshold', 'save_extra_preprocessing_info', 'num_features_to_use', 'num_features_to_exclude'};
@@ -455,6 +459,14 @@ classdef k_aid_app_exported < matlab.apps.AppBase
         % Classifier & Preprocessor
         app.ClassifierListBox.Value = prevAnalysis.classifier;
         app.PreprocessorsListBox.Value = prevAnalysis.preProc;
+        
+        if isfield(prevAnalysis, 'editFieldEnabled')
+            app.editFieldEnabled = prevAnalysis.editFieldEnabled;
+        else
+            [~, B] = intersect(app.PreprocessorsListBox.Items, prevAnalysis.preProc);
+            app.editFieldEnabled = false(size(app.PreprocessorsListBox.Items));
+            app.editFieldEnabled(B) = true;
+        end
         
         % Update this to make sure available_sites are correct
         update_k_curve(app);

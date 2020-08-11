@@ -18,17 +18,18 @@ end
 
 
 [vals inds] = max(X);
-[sorted_vals sorted_inds] = sort(X, 'descend');
-
-% if there are two equal max values, choose one randomly
-equal_max_val_inds = sorted_vals(1, :) == sorted_vals(2, :);   % if this is a vector and there are ties, this will equal 1, and the below code still works (b/c iTies is 1)
-
-if sum(equal_max_val_inds) > 0
+if length(vals) > 1
+  [sorted_vals sorted_inds] = sort(X, 'descend');
   
-  for iTies = find(equal_max_val_inds)   % go through each column of the matrix that has tied values and...
-    curr_max_inds = sorted_inds(find(sorted_vals(:, iTies) == sorted_vals(1, iTies)), iTies);   % find all indecies that have the maximum value
-    curr_max_inds = curr_max_inds(randperm(length(curr_max_inds)));   % randomly select an index from all the ones that have the maximum value
-    inds(iTies) = curr_max_inds(1);
+  % if there are two equal max values, choose one randomly
+  equal_max_val_inds = sorted_vals(1, :) == sorted_vals(2, :);   % if this is a vector and there are ties, this will equal 1, and the below code still works (b/c iTies is 1)
+  
+  if sum(equal_max_val_inds) > 0
+    
+    for iTies = find(equal_max_val_inds)   % go through each column of the matrix that has tied values and...
+      curr_max_inds = sorted_inds(find(sorted_vals(:, iTies) == sorted_vals(1, iTies)), iTies);   % find all indecies that have the maximum value
+      curr_max_inds = curr_max_inds(randperm(length(curr_max_inds)));   % randomly select an index from all the ones that have the maximum value
+      inds(iTies) = curr_max_inds(1);
+    end
   end
-  
 end
