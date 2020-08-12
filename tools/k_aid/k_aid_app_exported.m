@@ -13,7 +13,7 @@ classdef k_aid_app_exported < matlab.apps.AppBase
     SitefieldsListBoxLabel          matlab.ui.control.Label
     SiteFieldsListBox               matlab.ui.control.ListBox
     BinnedsiteInfoListBoxLabel      matlab.ui.control.Label
-    trialfieldsListBoxLabel         matlab.ui.control.Label
+    TrialfieldsLabel                matlab.ui.control.Label
     TrialFieldsListBox              matlab.ui.control.ListBox
     TrialLabelsListBoxLabel         matlab.ui.control.Label
     TrialLabelsListBox              matlab.ui.control.ListBox
@@ -513,19 +513,11 @@ classdef k_aid_app_exported < matlab.apps.AppBase
           end
         end
         
-        % Classifier & Preprocessor
+        % Classifier & Preprocessor, and parameter fields.
         app.ClassifierListBox.Value = prevAnalysis.classifier;
         app.PreprocessorsListBox.Value = prevAnalysis.preProc;
-        
-        % Keeping here for a bit of backwards compatibility.
-%         if isfield(prevAnalysis, 'editFieldEnabled')
-          app.editFieldEnabled = prevAnalysis.editFieldEnabled;
-%         else
-%           [~, B] = intersect(app.PreprocessorsListBox.Items, prevAnalysis.preProc);
-%           app.editFieldEnabled = false(size(app.PreprocessorsListBox.Items));
-%           app.editFieldEnabled(B) = true;
-%         end
-        
+        app.editFieldEnabled = prevAnalysis.editFieldEnabled;
+
         % Update this to make sure available_sites are correct
         update_k_curve(app);
       end
@@ -594,7 +586,7 @@ classdef k_aid_app_exported < matlab.apps.AppBase
       app.SitefieldsListBoxLabel.VerticalAlignment = 'top';
       app.SitefieldsListBoxLabel.FontSize = 16;
       app.SitefieldsListBoxLabel.FontWeight = 'bold';
-      app.SitefieldsListBoxLabel.Position = [461 689 79 16];
+      app.SitefieldsListBoxLabel.Position = [461 683 79 22];
       app.SitefieldsListBoxLabel.Text = 'Site fields';
 
       % Create SiteFieldsListBox
@@ -610,16 +602,16 @@ classdef k_aid_app_exported < matlab.apps.AppBase
       app.BinnedsiteInfoListBoxLabel.VerticalAlignment = 'top';
       app.BinnedsiteInfoListBoxLabel.FontSize = 16;
       app.BinnedsiteInfoListBoxLabel.FontWeight = 'bold';
-      app.BinnedsiteInfoListBoxLabel.Position = [461 543 85 16];
+      app.BinnedsiteInfoListBoxLabel.Position = [461 535 85 24];
       app.BinnedsiteInfoListBoxLabel.Text = 'Site labels';
 
-      % Create trialfieldsListBoxLabel
-      app.trialfieldsListBoxLabel = uilabel(app.UIFigure);
-      app.trialfieldsListBoxLabel.VerticalAlignment = 'top';
-      app.trialfieldsListBoxLabel.FontSize = 16;
-      app.trialfieldsListBoxLabel.FontWeight = 'bold';
-      app.trialfieldsListBoxLabel.Position = [26 368 126 22];
-      app.trialfieldsListBoxLabel.Text = 'trial fields';
+      % Create TrialfieldsLabel
+      app.TrialfieldsLabel = uilabel(app.UIFigure);
+      app.TrialfieldsLabel.VerticalAlignment = 'top';
+      app.TrialfieldsLabel.FontSize = 16;
+      app.TrialfieldsLabel.FontWeight = 'bold';
+      app.TrialfieldsLabel.Position = [26 368 126 22];
+      app.TrialfieldsLabel.Text = 'Trial fields';
 
       % Create TrialFieldsListBox
       app.TrialFieldsListBox = uilistbox(app.UIFigure);
@@ -647,27 +639,28 @@ classdef k_aid_app_exported < matlab.apps.AppBase
       % Create AnalysisfilenameEditFieldLabel
       app.AnalysisfilenameEditFieldLabel = uilabel(app.UIFigure);
       app.AnalysisfilenameEditFieldLabel.HorizontalAlignment = 'right';
-      app.AnalysisfilenameEditFieldLabel.Position = [475 267 102 22];
+      app.AnalysisfilenameEditFieldLabel.FontWeight = 'bold';
+      app.AnalysisfilenameEditFieldLabel.Position = [461 267 111 22];
       app.AnalysisfilenameEditFieldLabel.Text = 'Analysis filename:';
 
       % Create AnalysisfilenameEditField
       app.AnalysisfilenameEditField = uieditfield(app.UIFigure, 'text');
       app.AnalysisfilenameEditField.ValueChangedFcn = createCallbackFcn(app, @AnalysisfilenameEditFieldValueChanged, true);
-      app.AnalysisfilenameEditField.Position = [476 242 136 22];
+      app.AnalysisfilenameEditField.Position = [461 242 158 22];
 
       % Create SaveanalysisButton
       app.SaveanalysisButton = uibutton(app.UIFigure, 'push');
       app.SaveanalysisButton.ButtonPushedFcn = createCallbackFcn(app, @SaveanalysisButtonPushed, true);
       app.SaveanalysisButton.FontWeight = 'bold';
       app.SaveanalysisButton.Enable = 'off';
-      app.SaveanalysisButton.Position = [468 185 151 22];
+      app.SaveanalysisButton.Position = [461 185 158 22];
       app.SaveanalysisButton.Text = 'Save analysis';
 
       % Create SetsavedirectoryButton
       app.SetsavedirectoryButton = uibutton(app.UIFigure, 'push');
       app.SetsavedirectoryButton.ButtonPushedFcn = createCallbackFcn(app, @SetsavedirectoryButtonPushed, true);
       app.SetsavedirectoryButton.FontWeight = 'bold';
-      app.SetsavedirectoryButton.Position = [468 215 151 22];
+      app.SetsavedirectoryButton.Position = [461 215 158 22];
       app.SetsavedirectoryButton.Text = 'Set save directory';
 
       % Create ClassifierLabel
@@ -756,7 +749,7 @@ classdef k_aid_app_exported < matlab.apps.AppBase
       app.LoadanalysisButton.ButtonPushedFcn = createCallbackFcn(app, @LoadanalysisButtonPushed, true);
       app.LoadanalysisButton.FontWeight = 'bold';
       app.LoadanalysisButton.Enable = 'off';
-      app.LoadanalysisButton.Position = [468 156 151 22];
+      app.LoadanalysisButton.Position = [461 156 158 22];
       app.LoadanalysisButton.Text = 'Load analysis';
 
       % Create ClassificationofEditFieldLabel
