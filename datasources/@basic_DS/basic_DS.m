@@ -289,7 +289,7 @@ methods
       disp('initializing basic_DS.get_data')
       
       % if the_labels is a cell array of strings, convert the_labels into a vector of numbers
-      if iscell(ds.the_labels{1})  % just checking the first site (assuming it will be the same for all other sites)
+      if iscell(ds.the_labels{1}) ||  isstring(ds.the_labels{1}) % just checking the first site (assuming it will be the same for all other sites)
         
         ignore_case_of_strings = 0;  % for now, always respect the case of the strings used in the labels
         
@@ -416,13 +416,19 @@ methods
     num_cv_splits = ds.num_cv_splits;
     num_times_to_repeat_each_label_per_cv_split =  ds.num_times_to_repeat_each_label_per_cv_split;                         %#ok<*PROP>
     curr_resample_sites_to_use = ds.curr_resample_sites_to_use;
-    label_names_to_use = ds.label_names_to_use;  if size(label_names_to_use, 1) ~= 1, label_names_to_use = label_names_to_use'; end  % make sure labels numbers are in the correct orientation
+    label_names_to_use = ds.label_names_to_use;
+
     sites_to_use = ds.sites_to_use;
     sites_to_exclude = ds.sites_to_exclude;
     num_resample_sites = ds.num_resample_sites;
     sample_sites_with_replacement = ds.sample_sites_with_replacement;
     create_simultaneously_recorded_populations = ds.create_simultaneously_recorded_populations;
     %use_random_subset_of_k_labels_each_time_data_is_retrieved = ds.use_random_subset_of_k_labels_each_time_data_is_retrieved;
+    
+    % make sure labels numbers are in the correct orientation
+    if size(label_names_to_use, 1) ~= 1 
+      label_names_to_use = label_names_to_use'; 
+    end      
     
     % a santy checks
     if isempty(sites_to_use)

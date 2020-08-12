@@ -17,8 +17,8 @@ classdef k_aid_app_exported < matlab.apps.AppBase
     TrialFieldsListBox              matlab.ui.control.ListBox
     TrialLabelsListBoxLabel         matlab.ui.control.Label
     TrialLabelsListBox              matlab.ui.control.ListBox
-    filenameLabel                   matlab.ui.control.Label
-    filenameEditField               matlab.ui.control.EditField
+    AnalysisfilenameEditFieldLabel  matlab.ui.control.Label
+    AnalysisfilenameEditField       matlab.ui.control.EditField
     SaveanalysisButton              matlab.ui.control.Button
     SetsavedirectoryButton          matlab.ui.control.Button
     ClassifierLabel                 matlab.ui.control.Label
@@ -140,6 +140,35 @@ classdef k_aid_app_exported < matlab.apps.AppBase
       end
     end
     
+    
+    function new_plot_label = update_plot_label(app)
+      % Function called immediately prior to saving the function. Includes
+      % some key information at the end of the plot label defined in the GUI
+      % in parantheses for ease.
+      
+      % collect the current plot label.
+      core_label = app.ClassificationofEditField.Value;
+      
+      % Collect the other numbers of interest
+      reps_labels = sprintf('%d Reps', app.krepeatsneededEditField.Value);
+      units_label = sprintf('%d U', length(app.available_sites));
+      
+      % Cycle through the preprocessors and create a combo string for those
+      % enabled.
+      preprocc_labels = {' Top %s features', ' Bottom %s feature removed', ' p Thres = %s'};
+      var2save = app.editFieldEnabled;
+      preproc_combo_label = '';
+      preprocess_vals = [app.kincludeEditField.Value, app.kexcludeEditField.Value, app.pthresholdEditField.Value];
+      for pp_i = 1:length(preprocc_labels)
+        if var2save(pp_i) && ~(preprocess_vals(pp_i) == 0)
+          preproc_combo_label = [preproc_combo_label, ',', sprintf(preprocc_labels{pp_i}, num2str(preprocess_vals(pp_i)))];
+        end
+      end
+      
+      % Combine Label features into the new plot label.
+      new_plot_label = [core_label, sprintf(' (%s, %s%s)', reps_labels, units_label, preproc_combo_label)];
+      
+    end
   end
   
 
@@ -152,6 +181,7 @@ classdef k_aid_app_exported < matlab.apps.AppBase
       [rdfile, rdpath] = deal(0);
       
       if isnumeric(rdfile)
+        disp('loading default binned data and directory')
         rdfile = 'rasterData_binned_100ms_bins_50ms_sampled';
         rdpath = 'H:\Analyzed\batchAnalysis\NeuralDecodingTB\rasterData';
       end
@@ -161,8 +191,8 @@ classdef k_aid_app_exported < matlab.apps.AppBase
       rasterData = load(fullfile(rdpath, rdfile));
       
       % Populate the app's private properties with the unique entries
-      tmp = fields(rasterData.binned_site_info);
-      app.site_info_fields = tmp(1:end-1);
+      binned_site_labels = fields(rasterData.binned_site_info);
+      app.site_info_fields = binned_site_labels(1:end-1);
       
       tmp_site_info_labels = struct2cell(rasterData.binned_site_info);
       tmp_site_info_labels = tmp_site_info_labels(1:end-1);
@@ -180,8 +210,13 @@ classdef k_aid_app_exported < matlab.apps.AppBase
         end
         
         tmp = unique(tmp);
-        app.site_info_selected{label_i} = true(size(unique(tmp)));
-        
+        if ~strcmp(binned_site_labels{label_i}, 'UnitType')
+          app.site_info_selected{label_i} = true(size(tmp));
+        else
+          % In the case of Unit type, the default decoder shouldn't
+          % include MUA, as this may accidentially bias decoder.
+          app.site_info_selected{label_i} = ~strcmp(tmp, 'M');
+        end
         if iscell(tmp)
           app.site_info_labels{label_i} = tmp;
         else
@@ -238,6 +273,7 @@ classdef k_aid_app_exported < matlab.apps.AppBase
       
       app.PreprocessorsListBox.Items = {'zscore_normalize_FP', 'select_or_exclude_top_k_features_FP', 'select_pvalue_significant_features_FP'};
       app.PreprocessorsListBox.Value = {'zscore_normalize_FP'};
+      app.editFieldEnabled = strcmp(app.PreprocessorsListBox.Items, app.PreprocessorsListBox.Value);
       
     end
 
@@ -302,9 +338,9 @@ classdef k_aid_app_exported < matlab.apps.AppBase
       update_k_curve(app);
     end
 
-    % Value changed function: filenameEditField
-    function filenameEditFieldValueChanged(app, event)
-      value = app.filenameEditField.Value;
+    % Value changed function: AnalysisfilenameEditField
+    function AnalysisfilenameEditFieldValueChanged(app, event)
+      value = app.AnalysisfilenameEditField.Value;
       if ~isempty(value) && ~isempty(app.saveDirPath)
         app.SaveanalysisButton.Enable = true;
       end
@@ -331,7 +367,6 @@ classdef k_aid_app_exported < matlab.apps.AppBase
       analysisStruct.site_info_items = app.SiteFieldsListBox.Items;
       analysisStruct.site_info_selected = app.site_info_selected;
       analysisStruct.k_repeats_needed = app.krepeatsneededEditField.Value;
-      analysisStruct.plotTitle = app.ClassificationofEditField.Value;
       analysisStruct.save_extra_preprocessing_info = app.reportEditField.Value;
       analysisStruct.editFieldEnabled = app.editFieldEnabled;
       
@@ -353,8 +388,21 @@ classdef k_aid_app_exported < matlab.apps.AppBase
       analysisStruct.classifier = app.ClassifierListBox.Value;
       analysisStruct.preProc = app.PreprocessorsListBox.Value;
       
+      % Quick Check on kincludeexclude - If its on, only 1 can be non-zero.
+      % If both are 0 or non-0, throw an error.
+      if any(strcmp(app.PreprocessorsListBox.Value, 'select_or_exclude_top_k_features_FP'))
+        assert(xor(app.kincludeEditField.Value == 0, app.kexcludeEditField.Value == 0), 'if select k features is on, 1 and only 1 number must be non-0')
+      end
+      
+      if any(strcmp(app.PreprocessorsListBox.Value, 'select_pvalue_significant_features_FP'))
+        assert(app.pthresholdEditField.Value ~= 0, 'if p threshold is set, its value can not be 0')
+      end
+      
+      % Label Augmentation for ease.
+      analysisStruct.plotTitle = update_plot_label(app);
+      
       % save the file to the current directory
-      save(fullfile(app.saveDirPath, app.filenameEditField.Value), "analysisStruct")
+      save(fullfile(app.saveDirPath, app.AnalysisfilenameEditField.Value), "analysisStruct")
       
     end
 
@@ -375,7 +423,7 @@ classdef k_aid_app_exported < matlab.apps.AppBase
         app.LoadanalysisButton.Enable = true;
       end
       
-      if ~isempty(app.filenameEditField.Value) && ~isnumeric(app.saveDirPath)
+      if ~isempty(app.AnalysisfilenameEditField.Value) && ~isnumeric(app.saveDirPath)
         app.SaveanalysisButton.Enable = true;
       end
       
@@ -436,7 +484,16 @@ classdef k_aid_app_exported < matlab.apps.AppBase
         %analysisStruct.sites = app.available_sites;                       % This contains the 'site field/site label' based distinctions.
         app.TrialLabelsListBox.Value = prevAnalysis.label_names_to_use;
         app.krepeatsneededEditField.Value = prevAnalysis.num_cv_splits;
-        app.ClassificationofEditField.Value = prevAnalysis.plotTitle;
+        
+        % Remove the automatically added end of plotTitle prior to sticking
+        % it in the field.
+        endingStringStart = max(strfind(prevAnalysis.plotTitle, '('));
+        app.ClassificationofEditField.Value = strtrim(prevAnalysis.plotTitle(1:endingStringStart-1));
+        
+        % Replace edit field w/ loaded analysisFilename
+        [~, B, ~] = fileparts(analysisfile);
+        app.AnalysisfilenameEditField.Value = B;
+        
         % Warning here - If the items in the list are different, this may
         % cause indexing issues and unreliable results.
         if isempty(setdiff(app.SiteFieldsListBox.Items, prevAnalysis.site_info_items))
@@ -460,13 +517,14 @@ classdef k_aid_app_exported < matlab.apps.AppBase
         app.ClassifierListBox.Value = prevAnalysis.classifier;
         app.PreprocessorsListBox.Value = prevAnalysis.preProc;
         
-        if isfield(prevAnalysis, 'editFieldEnabled')
-            app.editFieldEnabled = prevAnalysis.editFieldEnabled;
-        else
-            [~, B] = intersect(app.PreprocessorsListBox.Items, prevAnalysis.preProc);
-            app.editFieldEnabled = false(size(app.PreprocessorsListBox.Items));
-            app.editFieldEnabled(B) = true;
-        end
+        % Keeping here for a bit of backwards compatibility.
+%         if isfield(prevAnalysis, 'editFieldEnabled')
+          app.editFieldEnabled = prevAnalysis.editFieldEnabled;
+%         else
+%           [~, B] = intersect(app.PreprocessorsListBox.Items, prevAnalysis.preProc);
+%           app.editFieldEnabled = false(size(app.PreprocessorsListBox.Items));
+%           app.editFieldEnabled(B) = true;
+%         end
         
         % Update this to make sure available_sites are correct
         update_k_curve(app);
@@ -586,30 +644,30 @@ classdef k_aid_app_exported < matlab.apps.AppBase
       app.TrialLabelsListBox.Position = [225 166 218 203];
       app.TrialLabelsListBox.Value = {};
 
-      % Create filenameLabel
-      app.filenameLabel = uilabel(app.UIFigure);
-      app.filenameLabel.HorizontalAlignment = 'right';
-      app.filenameLabel.Position = [465 263 58 22];
-      app.filenameLabel.Text = 'filename: ';
+      % Create AnalysisfilenameEditFieldLabel
+      app.AnalysisfilenameEditFieldLabel = uilabel(app.UIFigure);
+      app.AnalysisfilenameEditFieldLabel.HorizontalAlignment = 'right';
+      app.AnalysisfilenameEditFieldLabel.Position = [475 267 102 22];
+      app.AnalysisfilenameEditFieldLabel.Text = 'Analysis filename:';
 
-      % Create filenameEditField
-      app.filenameEditField = uieditfield(app.UIFigure, 'text');
-      app.filenameEditField.ValueChangedFcn = createCallbackFcn(app, @filenameEditFieldValueChanged, true);
-      app.filenameEditField.Position = [524 263 100 22];
+      % Create AnalysisfilenameEditField
+      app.AnalysisfilenameEditField = uieditfield(app.UIFigure, 'text');
+      app.AnalysisfilenameEditField.ValueChangedFcn = createCallbackFcn(app, @AnalysisfilenameEditFieldValueChanged, true);
+      app.AnalysisfilenameEditField.Position = [476 242 136 22];
 
       % Create SaveanalysisButton
       app.SaveanalysisButton = uibutton(app.UIFigure, 'push');
       app.SaveanalysisButton.ButtonPushedFcn = createCallbackFcn(app, @SaveanalysisButtonPushed, true);
       app.SaveanalysisButton.FontWeight = 'bold';
       app.SaveanalysisButton.Enable = 'off';
-      app.SaveanalysisButton.Position = [468 204 151 22];
+      app.SaveanalysisButton.Position = [468 185 151 22];
       app.SaveanalysisButton.Text = 'Save analysis';
 
       % Create SetsavedirectoryButton
       app.SetsavedirectoryButton = uibutton(app.UIFigure, 'push');
       app.SetsavedirectoryButton.ButtonPushedFcn = createCallbackFcn(app, @SetsavedirectoryButtonPushed, true);
       app.SetsavedirectoryButton.FontWeight = 'bold';
-      app.SetsavedirectoryButton.Position = [468 234 151 22];
+      app.SetsavedirectoryButton.Position = [468 215 151 22];
       app.SetsavedirectoryButton.Text = 'Set save directory';
 
       % Create ClassifierLabel
@@ -698,7 +756,7 @@ classdef k_aid_app_exported < matlab.apps.AppBase
       app.LoadanalysisButton.ButtonPushedFcn = createCallbackFcn(app, @LoadanalysisButtonPushed, true);
       app.LoadanalysisButton.FontWeight = 'bold';
       app.LoadanalysisButton.Enable = 'off';
-      app.LoadanalysisButton.Position = [468 175 151 22];
+      app.LoadanalysisButton.Position = [468 156 151 22];
       app.LoadanalysisButton.Text = 'Load analysis';
 
       % Create ClassificationofEditFieldLabel
