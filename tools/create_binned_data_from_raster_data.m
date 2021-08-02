@@ -163,6 +163,7 @@ fprintf('\n');
 
 % go through all the files and bin them
 binned_data = cell(1, length(raster_file_dir));
+theHoles = [];
 for i = 1:length(raster_file_dir)
 
     % print a message the the data is being binned (and add a dot for each file that has been binned
@@ -183,12 +184,13 @@ for i = 1:length(raster_file_dir)
    % save all the labels
    the_label_names = fieldnames(raster_labels);
    for iLabel = 1:length(the_label_names)
-      eval(['binned_labels.' the_label_names{iLabel} '{i} = raster_labels.' the_label_names{iLabel} ';']); 
+%       eval(['binned_labels.' the_label_names{iLabel} '{i} = raster_labels.' the_label_names{iLabel} ';']); 
+      binned_labels.(the_label_names{iLabel}){i} = raster_labels.(the_label_names{iLabel});
    end
    
    % save any extra neuron info
    if ~isempty(raster_site_info)
-     % binned_site_info(i) = raster_site_info;      % Is there a reason this doesn't work?
+%      binned_site_info(i) = raster_site_info;      % Is there a reason this doesn't work?
      the_info_field_names = fieldnames(raster_site_info);
      for iInfo = 1:length(the_info_field_names)
        
@@ -197,12 +199,20 @@ for i = 1:length(raster_file_dir)
          binned_site_info.(the_info_field_names{iInfo}){i} = raster_site_info.(the_info_field_names{iInfo});
        elseif isempty(raster_site_info.(the_info_field_names{iInfo}))
          % just ignore this field if it is empty...
+         disp('does this happen');
+         theHoles = [theHoles; i];
        else
          %eval(['binned_site_info.' the_info_field_names{iInfo} '(i, :) = raster_site_info.' the_info_field_names{iInfo} ';']);   % might run into problems with this so above line could be more useful
          binned_site_info.(the_info_field_names{iInfo})(i, :) = raster_site_info.(the_info_field_names{iInfo});
        end
        
      end
+     
+     % Make sure all the fields are of the same length. Throw an error if
+     % not.
+     fieldLengths = structfun(@(x) length(x), binned_site_info);
+%      assert(unique(fieldLengths(1:end-1)) == i, 'Error found');
+     
    else
      binned_site_info = [];
    end

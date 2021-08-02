@@ -522,6 +522,7 @@ classdef plot_standard_results_object
                         
                         
                        pval_obj = pvalue_object(plot_obj.result_file_names{iResult}, plot_obj.p_values{iResult});
+                       pval_obj.saved_results_structure_name = plot_obj.saved_results_structure_name;
                        pval_obj.the_result_type = plot_obj.result_type_to_plot;
                        pval_obj.collapse_all_times_when_estimating_pvals = plot_obj.collapse_all_times_when_estimating_pvals;
                        plot_obj.p_values{iResult} = pval_obj.create_pvalues_from_nulldist_files;

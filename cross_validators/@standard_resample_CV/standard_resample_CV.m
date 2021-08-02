@@ -450,14 +450,6 @@ classdef standard_resample_CV
                             % train the classifier 
                             classifier = classifier.train(XTr, YTr);   
                             
-                            %Plot the templates, if you'd like to see them
-                            plot_templates = 0;
-                            if plot_templates
-                              figure()
-                              hold on
-                              arrayfun(@(x) plot(1:length(classifier.templates), classifier.templates(:,x)), 1:length(classifier.labels))
-                              legend(num2str(classifier.labels));
-                            end
                             % if one wants to only test at the same time points that were used for training (to speed things up)
                             if test_only_at_training_times == 1
                                 test_interval = iTrainingInterval;
@@ -854,12 +846,13 @@ classdef standard_resample_CV
             % save additional results (could have this code in the body of this method, but trying to make things more readable)
             DECODING_RESULTS = cv.save_more_decoding_measures(DECODING_RESULTS);
             
-            % create and confusion matrices and mutual information results                                       
+            % create and confusion matrices and mutual information results 
             if (cv.confusion_matrix_params.create_confusion_matrix == 1) || (cv.confusion_matrix_params.create_all_test_points_separate_confusion_matrix == 1) || cv.save_results.mutual_information == 1
-
+                
                 % Using a separate function to create the confusion matrix (this could make the code more memory intensive, but the code is now easier to read).
                 % I am assuming YTe is the same for all time periods, which should always be met as far as I can tell
                 % confusion matrix => predicted_label x real_label x num_time_periods x num_time_periods
+                
                DECODING_RESULTS = create_confusion_matrices_and_MI(cv, YTe, all_predicted_labels_for_confusion_matrix_and_MI, DECODING_RESULTS);
 
                if (cv.save_results.normalized_rank == 1) 

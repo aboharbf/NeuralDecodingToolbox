@@ -92,7 +92,8 @@ properties
                                                          %  and every CV training set does not consist of (num_cv_splits -1) * num_labels data points
                                                          %  but instead consists of length(cell2mat(the_test_label_names)) training points.
                                                          
-                                                         
+    initialized = 0;                        % A switch used to determine whether the datasource has been previously initialized. Moved from private properties to public for the sake of more easily generating scrambles. FA 6/3/21
+                                                     
     % some properties of basic_DS that will also be available in generalization_DS by setting the basic_DS properties
                                                          
     num_times_to_repeat_each_label_per_cv_split = 1;     %  how many of each unique label should be in each CV block
@@ -105,8 +106,7 @@ properties
     sites_to_use = -1;                   %  a list of indices of which sites (neurons) to use in the the_data cell array 
     sites_to_exclude = [];               %  a list of features that should explicitly be excluded
     time_periods_to_get_data_from = [];  %  a cell array containing vectors that specify which time bins to use from the_data 
-
-                                        
+    
     % randomly shuffles the labels prior to the get_data method being called - which is useful for creating one point in a null distribution to check if decoding results are above what is expected by change.
     randomly_shuffle_labels_before_running = 0;                                                        
                                                          
@@ -116,9 +116,7 @@ end
 
 
 properties (GetAccess = 'public', SetAccess = 'private')
- 
-      initialized = 0;
-            
+             
       the_training_label_numbers = [];   % numbers that the_training_label_names were mapping on to
       the_test_label_numbers = [];       % numbers that the_test_label_names were mapping on to
 end
@@ -318,10 +316,10 @@ methods
             
             % remap labels (only using old 'test' data because I want each CV split to be independent)
             remapped_YTr_all = NaN .* ones(size(YTr_all));  % only getting labels (and data) from test set b/c want each CV split to contain unique data
-            remapped_YTe_all = NaN .* ones(size(YTe_al));
+            remapped_YTe_all = NaN .* ones(size(YTe_all));
 
             for iGroup = 1:length(the_training_label_numbers)
-                remapped_YTr_all(ismember(YTr_all_cv, the_training_label_numbers{iGroup})) = iGroup;
+                remapped_YTr_all(ismember(YTr_all, the_training_label_numbers{iGroup})) = iGroup;
                 remapped_YTe_all(ismember(YTe_all, the_test_label_numbers{iGroup})) = iGroup;
             end
             

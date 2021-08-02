@@ -122,17 +122,13 @@ classdef libsvm_CL
         model = [];  % the model learned from the training data 
   end
     
-    
-
     methods 
 
         % constructor 
         function cl = libsvm_CL
         end
         
-  
-        
-        function cl = train(cl, XTr, YTr)  
+        function cl = train(cl, XTr, YTr)
 
             % added sanity check
             if size(YTr, 2) ~= size(XTr, 2)  &&  size(YTr, 1) ~= size(XTr, 2) 
@@ -199,7 +195,9 @@ classdef libsvm_CL
             
             
             if strcmp(cl.multiclass_classificaion_scheme, 'all_pairs')
-            
+                if strcmp(cl.kernel, 'gaussian')
+                  assert(~isempty(cl.gaussian_gamma), 'when using Gaussian/RBF Kernal, svm.gaussian_gamma must be set.')
+                end
                 [predic_label, junk_fake_accuracy, libsvm_format_all_pairs_decision_vals] = svmpredict(junk_fake_xte_labels, double(XTe'), cl.model);   % edited by Ethan to work with libsvm 2.86 (compared to 2.8)
 
                 predicted_labels = predic_label(:,1);
